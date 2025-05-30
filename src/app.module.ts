@@ -5,6 +5,7 @@ import configuration from './config/configuration';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ProjectsModule } from './domains/portfolio/projects/projects.module';
 import { CustomLoggerService } from './common/logger/custom-logger.service';
+import { AboutModule } from './domains/portfolio/about/about.module';
 
 @Module({
   imports: [
@@ -18,9 +19,7 @@ import { CustomLoggerService } from './common/logger/custom-logger.service';
         const logger = new CustomLoggerService('MongoDB');
         const uri = config.get<string>('MONGO_URI');
         if (!uri) {
-          logger.error(
-            'MONGO_URI is not defined in the environment variables.',
-          );
+          logger.error('MONGO_URI is not defined in the environment variables.');
           process.exit(1);
         }
         return {
@@ -30,6 +29,7 @@ import { CustomLoggerService } from './common/logger/custom-logger.service';
       },
     }),
 
+    AboutModule,
     ProjectsModule,
   ],
   controllers: [AppController],

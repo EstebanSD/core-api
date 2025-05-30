@@ -5,9 +5,7 @@ import { Project, ProjectDocument } from '../schemas/project.schema';
 
 @Injectable()
 export class ProjectsService {
-  constructor(
-    @InjectModel(Project.name) private projectModel: Model<ProjectDocument>,
-  ) {}
+  constructor(@InjectModel(Project.name) private projectModel: Model<ProjectDocument>) {}
 
   async findAll(): Promise<Project[]> {
     return this.projectModel.find().exec();
