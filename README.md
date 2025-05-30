@@ -27,7 +27,7 @@ This backend serves as the central data source for multiple front-ends (e.g. por
 
 ```bash
 
- git clone https://github.com/your-username/core-api.git
+ git clone https://github.com/EstebanSD/core-api.git
  cd core-api
 
 ```
