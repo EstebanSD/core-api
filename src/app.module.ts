@@ -3,7 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
 import configuration from './config/configuration';
 import { MongooseModule } from '@nestjs/mongoose';
-import { ProjectsModule } from './domains/portfolio/projects/projects.module';
+import { ProjectModule } from './domains/portfolio/projects/project.module';
 import { CustomLoggerService } from './common/logger/custom-logger.service';
 import { AboutModule } from './domains/portfolio/about/about.module';
 
@@ -30,7 +30,7 @@ import { AboutModule } from './domains/portfolio/about/about.module';
     }),
 
     AboutModule,
-    ProjectsModule,
+    ProjectModule,
   ],
   controllers: [AppController],
   providers: [CustomLoggerService],
