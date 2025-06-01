@@ -17,7 +17,7 @@ export class LocalStorageService implements IStorageService {
     await fs.writeFile(fullPath, fileBuffer);
 
     return {
-      url: `http://localhost:3000/uploads/${fullFilename}`,
+      url: `http://localhost:8080/uploads/${fullFilename}`,
       publicId: fullFilename,
       format: ext,
       resourceType: 'raw',

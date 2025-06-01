@@ -2,14 +2,14 @@ import {
   IsString,
   IsNotEmpty,
   IsOptional,
-  IsEnum,
   IsDateString,
   IsArray,
   IsUrl,
   ValidateNested,
+  IsIn,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { TECH_STACK, TechStack } from 'src/types';
+import { LOCALE_ENUM, TECH_STACK, TechStack } from 'src/types';
 import { PROJECT_STATUSES, PROJECT_TYPES, ProjectStatus, ProjectType } from 'src/types/portfolio';
 
 class ProjectLinksDto {
@@ -25,6 +25,7 @@ class ProjectLinksDto {
 export class CreateProjectDto {
   @IsString()
   @IsNotEmpty()
+  @IsIn(LOCALE_ENUM)
   locale: string;
 
   @IsString()
@@ -35,10 +36,14 @@ export class CreateProjectDto {
   @IsNotEmpty()
   description: string;
 
-  @IsEnum(PROJECT_STATUSES)
+  @IsString()
+  @IsNotEmpty()
+  @IsIn(PROJECT_STATUSES)
   status: ProjectStatus;
 
-  @IsEnum(PROJECT_TYPES)
+  @IsString()
+  @IsNotEmpty()
+  @IsIn(PROJECT_TYPES)
   type: ProjectType;
 
   @IsOptional()
@@ -51,16 +56,11 @@ export class CreateProjectDto {
 
   @IsOptional()
   @IsArray()
-  @IsEnum(TECH_STACK, { each: true })
+  @IsIn(TECH_STACK, { each: true })
   technologies?: TechStack[];
 
   @IsOptional()
   @ValidateNested()
   @Type(() => ProjectLinksDto)
   links?: ProjectLinksDto;
-
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  images?: string[];
 }

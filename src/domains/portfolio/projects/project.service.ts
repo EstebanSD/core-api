@@ -1,16 +1,22 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, Inject } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Project, ProjectDocument } from '../schemas/project.schema';
 import { CreateProjectDto } from './dtos/create-project.dto';
 import { UpdateProjectDto } from './dtos/update-project.dto';
 import { FindProjectsDto } from './dtos/find-project.dto';
+import { IStorageService } from 'src/libs/storage/interfaces/storage.interface';
 
 @Injectable()
 export class ProjectService {
-  constructor(@InjectModel(Project.name) private readonly projectModel: Model<ProjectDocument>) {}
+  constructor(
+    @InjectModel(Project.name) private readonly projectModel: Model<ProjectDocument>,
+    @Inject('IStorageService') private readonly storageService: IStorageService,
+  ) {}
 
-  async create(dto: CreateProjectDto): Promise<Project> {
+  async create(
+    dto: CreateProjectDto & { fileBuffer?: Buffer; filename?: string; mimetype?: string },
+  ): Promise<Project> {
     const exists = await this.projectModel
       .findOne({
         title: dto.title,
@@ -24,7 +30,21 @@ export class ProjectService {
       );
     }
 
-    const created = new this.projectModel(dto);
+    let imageUrl: string | undefined;
+    if (dto.fileBuffer && dto.filename && dto.mimetype) {
+      const uploaded = await this.storageService.uploadFile({
+        fileBuffer: dto.fileBuffer,
+        filename: dto.filename,
+        mimetype: dto.mimetype,
+        folder: 'portfolio/projects',
+      });
+      imageUrl = uploaded.url;
+    }
+
+    const created = new this.projectModel({
+      ...dto,
+      images: imageUrl ? [imageUrl] : [],
+    });
     return created.save();
   }
 
