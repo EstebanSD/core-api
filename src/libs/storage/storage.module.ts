@@ -17,11 +17,11 @@ export class StorageModule {
 
             switch (provider) {
               case 's3':
-                return new S3Service();
+                return new S3Service(logger);
               case 'cloudinary':
                 return new CloudinaryService(configService, logger);
               default:
-                return new LocalStorageService();
+                return new LocalStorageService(configService, logger);
             }
           },
           inject: [ConfigService, CustomLoggerService],

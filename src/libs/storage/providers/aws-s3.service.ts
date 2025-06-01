@@ -1,12 +1,19 @@
+import { CustomLoggerService } from 'src/common/logger/custom-logger.service';
 import { IStorageService, UploadedFile, UploadFileParams } from '../interfaces/storage.interface';
 
+/**
+ * Temporary mock service for S3 storage.
+ * This stub is used during development and does not perform any real upload/delete operations.
+ */
 export class S3Service implements IStorageService {
+  constructor(private readonly logger: CustomLoggerService) {}
+
   async uploadFile(params: UploadFileParams): Promise<UploadedFile> {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     return {
-      url: `http://localhost/fake/${params.filename}`,
-      publicId: `mock-${params.filename}`,
-      format: params.mimetype.split('/')[1],
+      url: `http://localhost/mock-s3/${params.filename}`,
+      publicId: `mock-s3-${params.filename}`,
+      format: params.mimetype.split('/')[1] ?? 'bin',
       resourceType: 'raw',
       size: params.fileBuffer.length,
     };
@@ -14,6 +21,6 @@ export class S3Service implements IStorageService {
 
   async deleteFile(publicId: string): Promise<void> {
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    console.log(`Mock delete file with publicId: ${publicId}`);
+    this.logger.log(`[S3Service Stub] Deleted: ${publicId}`);
   }
 }
