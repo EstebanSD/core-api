@@ -6,6 +6,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ProjectModule } from './domains/portfolio/projects/project.module';
 import { CustomLoggerService } from './common/logger/custom-logger.service';
 import { AboutModule } from './domains/portfolio/about/about.module';
+import { StorageModule } from './libs/storage/storage.module';
+import { CustomLoggerModule } from './common/logger/custom-logger.module';
 
 @Module({
   imports: [
@@ -28,12 +30,11 @@ import { AboutModule } from './domains/portfolio/about/about.module';
         };
       },
     }),
-
+    CustomLoggerModule,
+    StorageModule.registerAsync(),
     AboutModule,
     ProjectModule,
   ],
   controllers: [AppController],
-  providers: [CustomLoggerService],
-  exports: [CustomLoggerService],
 })
 export class AppModule {}
