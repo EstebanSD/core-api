@@ -1,16 +1,22 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { About, AboutGeneral, AboutTranslation } from '../schemas/about.schema';
+import {
+  About,
+  AboutGeneral,
+  AboutGeneralDocument,
+  AboutTranslation,
+  AboutTranslationDocument,
+} from '../schemas/about.schema';
 import { CreateAboutDto } from './dtos/create-about.dto';
 import { UpdateAboutDto } from './dtos/update-about.dto';
 
 @Injectable()
 export class AboutService {
   constructor(
-    @InjectModel(AboutGeneral.name) private generalModel: Model<AboutGeneral>,
+    @InjectModel(AboutGeneral.name) private readonly generalModel: Model<AboutGeneralDocument>,
     @InjectModel(AboutTranslation.name)
-    private translationModel: Model<AboutTranslation>,
+    private readonly translationModel: Model<AboutTranslationDocument>,
   ) {}
 
   private async createTranslation(body: CreateAboutDto, id: Types.ObjectId): Promise<void> {

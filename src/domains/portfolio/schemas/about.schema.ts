@@ -1,11 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
-import { LOCALE_ENUM } from 'src/libs/types';
+import { HydratedDocument, Types } from 'mongoose';
+import { LOCALE_ENUM } from 'src/types';
 
 @Schema({ timestamps: true })
-export class AboutGeneral extends Document {
-  declare _id: Types.ObjectId;
-
+export class AboutGeneral {
   @Prop()
   image?: string;
 
@@ -24,9 +22,7 @@ export class AboutGeneral extends Document {
 export const AboutGeneralSchema = SchemaFactory.createForClass(AboutGeneral);
 
 @Schema({ timestamps: true })
-export class AboutTranslation extends Document {
-  declare _id: Types.ObjectId;
-
+export class AboutTranslation {
   @Prop({ type: String, enum: LOCALE_ENUM, required: true, unique: true })
   locale: string;
 
@@ -53,3 +49,6 @@ export type About = {
   image?: string;
   socialLinks?: Record<string, string>;
 };
+
+export type AboutGeneralDocument = HydratedDocument<AboutGeneral>;
+export type AboutTranslationDocument = HydratedDocument<AboutTranslation>;
