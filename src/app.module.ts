@@ -8,12 +8,18 @@ import { CustomLoggerService } from './common/logger/custom-logger.service';
 import { AboutModule } from './domains/portfolio/about/about.module';
 import { StorageModule } from './libs/storage/storage.module';
 import { CustomLoggerModule } from './common/logger/custom-logger.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       load: [configuration],
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), 'uploads'),
+      serveRoot: '/uploads',
     }),
     MongooseModule.forRootAsync({
       inject: [ConfigService],
