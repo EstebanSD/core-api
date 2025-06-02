@@ -5,7 +5,8 @@ import { Project, ProjectDocument } from '../schemas/project.schema';
 import { CreateProjectDto } from './dtos/create-project.dto';
 import { UpdateProjectDto } from './dtos/update-project.dto';
 import { FindProjectsDto } from './dtos/find-project.dto';
-import { IStorageService } from 'src/libs/storage/interfaces/storage.interface';
+import { IStorageService, UploadFileParams } from 'src/libs/storage/interfaces';
+import { uploadMultiple } from 'src/libs/storage/helpers';
 
 @Injectable()
 export class ProjectService {
@@ -14,38 +15,27 @@ export class ProjectService {
     @Inject('IStorageService') private readonly storageService: IStorageService,
   ) {}
 
-  async create(
-    dto: CreateProjectDto & { fileBuffer?: Buffer; filename?: string; mimetype?: string },
-  ): Promise<Project> {
+  async create(body: CreateProjectDto, files?: UploadFileParams[]): Promise<Project> {
     const exists = await this.projectModel
       .findOne({
-        title: dto.title,
-        locale: dto.locale,
+        title: body.title,
+        locale: body.locale,
       })
       .exec();
 
     if (exists) {
       throw new ConflictException(
-        `Project with title "${dto.title}" already exists for locale "${dto.locale}"`,
+        `Project with title "${body.title}" already exists for locale "${body.locale}"`,
       );
     }
 
-    let imageUrl: string | undefined;
-    if (dto.fileBuffer && dto.filename && dto.mimetype) {
-      const uploaded = await this.storageService.uploadFile({
-        fileBuffer: dto.fileBuffer,
-        filename: dto.filename,
-        mimetype: dto.mimetype,
-        folder: 'portfolio/projects',
-      });
-      imageUrl = uploaded.url;
-    }
+    const imagesData = await uploadMultiple(this.storageService, 'portfolio/projects', files ?? []);
 
     const created = new this.projectModel({
-      ...dto,
-      images: imageUrl ? [imageUrl] : [],
+      ...body,
+      images: imagesData,
     });
-    return created.save();
+    return await created.save();
   }
 
   async findAll(query: FindProjectsDto): Promise<Project[]> {
@@ -58,14 +48,28 @@ export class ProjectService {
     return project;
   }
 
-  async update(id: string, dto: UpdateProjectDto): Promise<void> {
-    const updated = await this.projectModel
-      .findByIdAndUpdate(id, dto, { new: true, runValidators: true })
-      .exec();
+  async update(id: string, body: UpdateProjectDto, files?: UploadFileParams[]): Promise<Project> {
+    const project = await this.projectModel.findById(id).exec();
+    if (!project) {
+      throw new NotFoundException(`Project with id "${id}" not found`);
+    }
 
-    if (!updated) throw new NotFoundException('Project not found');
+    Object.assign(project, {
+      ...body,
+    });
 
-    return;
+    if (files?.length) {
+      if (project.images?.length) {
+        await Promise.all(
+          project.images.map((img) => this.storageService.deleteFile(img.publicId)),
+        );
+      }
+
+      const imagesData = await uploadMultiple(this.storageService, 'portfolio/projects', files);
+      project.images = imagesData;
+    }
+
+    return await project.save();
   }
 
   // async remove(id: string): Promise<void> {

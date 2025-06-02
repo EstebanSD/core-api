@@ -8,6 +8,7 @@ import {
   AboutTranslation,
   AboutTranslationSchema,
 } from '../schemas/about.schema';
+import { StorageModule } from 'src/libs/storage/storage.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import {
       { name: AboutGeneral.name, schema: AboutGeneralSchema },
       { name: AboutTranslation.name, schema: AboutTranslationSchema },
     ]),
+    StorageModule.registerAsync(),
   ],
   controllers: [AboutController],
   providers: [AboutService],
