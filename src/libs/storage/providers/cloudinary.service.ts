@@ -3,7 +3,8 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { v2 as cloudinary, UploadApiOptions } from 'cloudinary';
 import { CustomLoggerService } from 'src/common/logger/custom-logger.service';
-import { IStorageService, UploadedFile, UploadFileParams } from '../interfaces/storage.interface';
+import { IStorageService, UploadedFile, UploadFileParams } from '../interfaces';
+import * as path from 'path';
 
 type CloudinaryDestroyResponse = {
   result: 'ok' | 'not found' | 'error';
@@ -25,9 +26,10 @@ export class CloudinaryService implements IStorageService {
   async uploadFile(params: UploadFileParams): Promise<UploadedFile> {
     const { fileBuffer, filename, mimetype, folder, resourceType = 'auto' } = params;
     try {
+      const nameWithoutExt = path.parse(filename).name;
       const uploadOptions: UploadApiOptions = {
         resource_type: resourceType,
-        public_id: filename,
+        public_id: nameWithoutExt,
         folder,
         format: mimetype.split('/')[1],
       };

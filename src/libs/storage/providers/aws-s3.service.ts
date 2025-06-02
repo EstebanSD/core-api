@@ -1,5 +1,5 @@
 import { CustomLoggerService } from 'src/common/logger/custom-logger.service';
-import { IStorageService, UploadedFile, UploadFileParams } from '../interfaces/storage.interface';
+import { IStorageService, UploadedFile, UploadFileParams } from '../interfaces';
 
 /**
  * Temporary mock service for S3 storage.

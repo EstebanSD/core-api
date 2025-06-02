@@ -1,7 +1,7 @@
-import { Controller, Get, Post, Body, Patch, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, UploadedFile } from '@nestjs/common';
 import { AboutService } from './about.service';
-import { CreateAboutDto } from './dtos/create-about.dto';
-import { UpdateAboutDto } from './dtos/update-about.dto';
+import { CreateAboutDto, UpdateAboutDto } from './dtos';
+import { ImageUploadInterceptor } from 'src/common/interceptors';
 
 @Controller('portfolio/about')
 export class AboutController {
@@ -13,12 +13,26 @@ export class AboutController {
   }
 
   @Post()
-  create(@Body() dto: CreateAboutDto) {
-    return this.service.createByLocale(dto);
+  @ImageUploadInterceptor('file', 2)
+  create(@Body() body: CreateAboutDto, @UploadedFile() file: Express.Multer.File) {
+    return this.service.createByLocale(body, {
+      fileBuffer: file?.buffer,
+      filename: file?.originalname,
+      mimetype: file?.mimetype,
+    });
   }
 
   @Patch(':locale')
-  update(@Param('locale') locale: string, @Body() dto: UpdateAboutDto) {
-    return this.service.updateByLocale(locale, dto);
+  @ImageUploadInterceptor('file', 2)
+  update(
+    @Param('locale') locale: string,
+    @Body() body: UpdateAboutDto,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.service.updateByLocale(locale, body, {
+      fileBuffer: file?.buffer,
+      filename: file?.originalname,
+      mimetype: file?.mimetype,
+    });
   }
 }

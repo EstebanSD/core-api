@@ -1,5 +1,5 @@
 import { ConfigService } from '@nestjs/config';
-import { IStorageService, UploadedFile, UploadFileParams } from '../interfaces/storage.interface';
+import { IStorageService, UploadedFile, UploadFileParams } from '../interfaces';
 import { CustomLoggerService } from 'src/common/logger/custom-logger.service';
 import { promises as fs } from 'fs';
 import * as path from 'path';
@@ -19,13 +19,12 @@ export class LocalStorageService implements IStorageService {
       const id = uuid();
       const ext =
         typeof mimetype === 'string' && mimetype.includes('/') ? mimetype.split('/')[1] : '';
-      const fullFilename = `${id}-${filename}.${ext}`;
+      const nameWithoutExt = path.parse(filename).name;
+      const fullFilename = `${id}-${nameWithoutExt}.${ext}`;
       const fullPath = path.join(this.uploadPath, fullFilename);
 
       await fs.mkdir(this.uploadPath, { recursive: true });
       await fs.writeFile(fullPath, fileBuffer);
-
-      console.log('Saving to:', this.uploadPath);
 
       const base_url = this.configService.get<string>('BASE_URL') || 'http://localhost:8080';
       return {

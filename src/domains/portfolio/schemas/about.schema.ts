@@ -1,17 +1,19 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
+import { Image } from 'src/common/schemas';
 import { LOCALE_ENUM } from 'src/types';
 
 @Schema({ timestamps: true })
 export class AboutGeneral {
-  @Prop()
-  image?: string;
+  @Prop({ type: Image })
+  image?: Image;
 
   @Prop({
     type: {
       github: { type: String },
       linkedin: { type: String },
     },
+    _id: false,
   })
   socialLinks?: {
     github?: string;

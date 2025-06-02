@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
 import { PROJECT_STATUSES, PROJECT_TYPES, ProjectStatus, ProjectType } from 'src/types/portfolio';
 import { TECH_STACK, TechStack } from 'src/types';
+import { Image } from 'src/common/schemas';
 
 @Schema({ timestamps: true })
 export class Project {
@@ -34,14 +35,15 @@ export class Project {
       github: { type: String },
       website: { type: String },
     },
+    _id: false,
   })
   links?: {
     github?: string;
     website?: string;
   };
 
-  @Prop([String])
-  images?: string[];
+  @Prop({ type: [Image] })
+  images?: Image[];
 }
 
 export const ProjectSchema = SchemaFactory.createForClass(Project);

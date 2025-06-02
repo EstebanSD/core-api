@@ -31,10 +31,6 @@ export class CreateAboutDto {
   bio: string;
 
   @IsOptional()
-  @IsString()
-  image?: string;
-
-  @IsOptional()
   @ValidateNested()
   @Type(() => SocialLinksDto)
   socialLinks?: SocialLinksDto;
