@@ -26,7 +26,7 @@ export class LocalStorageService implements IStorageService {
       await fs.mkdir(this.uploadPath, { recursive: true });
       await fs.writeFile(fullPath, fileBuffer);
 
-      const base_url = this.configService.apiUrl;
+      const base_url = this.configService.baseUrl;
       return {
         url: `${base_url}/uploads/${fullFilename}`,
         publicId: fullFilename,
