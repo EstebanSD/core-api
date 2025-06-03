@@ -21,7 +21,7 @@ This backend serves as the central data source for multiple front-ends (e.g. por
 > You can:
 >
 > - Create a free MongoDB Atlas cluster: https://www.mongodb.com/cloud/atlas/register
-> - Replace `<username>` and `<password>` in the `.env` file with your actual credentials.
+> - Replace `<username>` and `<password>` in the `.env.development` file with your actual credentials.
 
 ---
 
@@ -32,7 +32,7 @@ This project supports multiple file storage providers via a pluggable architectu
 - `local` (default): stores files on the local filesystem (temporary usage).
 - `cloudinary`: uploads files to [Cloudinary](https://cloudinary.com/).
 
-Set the provider in your `.env`:
+Set the provider in your `.env.development`:
 
 ```env
 
@@ -74,7 +74,7 @@ Create your .env based on the provided .env.example:
 
 ```bash
 
- cp .env.example .env
+ cp .env.example .env.development
 
 ```
 
