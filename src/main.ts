@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ConfigService } from '@nestjs/config';
+import { AppConfigService } from './config';
 import { ValidationPipe } from '@nestjs/common';
 import { CustomLoggerService } from './common/logger/custom-logger.service';
 import { LoggingInterceptor } from './common/interceptors';
@@ -10,7 +10,7 @@ async function bootstrap() {
     logger: new CustomLoggerService(),
   });
 
-  const config = app.get(ConfigService);
+  const config = app.get(AppConfigService);
 
   app.enableCors();
   app.useGlobalPipes(
@@ -23,7 +23,7 @@ async function bootstrap() {
   app.useGlobalInterceptors(new LoggingInterceptor());
   app.setGlobalPrefix('api');
 
-  const port = config.get<number>('port') ?? 8080;
+  const port = config.port;
   await app.listen(port);
 
   const isProd = process.env.NODE_ENV === 'production';

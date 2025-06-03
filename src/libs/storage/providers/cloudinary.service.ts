@@ -1,6 +1,6 @@
 import { Readable } from 'stream';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { AppConfigService } from 'src/config';
 import { v2 as cloudinary, UploadApiOptions } from 'cloudinary';
 import { CustomLoggerService } from 'src/common/logger/custom-logger.service';
 import { IStorageService, UploadedFile, UploadFileParams } from '../interfaces';
@@ -13,13 +13,14 @@ type CloudinaryDestroyResponse = {
 @Injectable()
 export class CloudinaryService implements IStorageService {
   constructor(
-    private readonly configService: ConfigService,
+    private readonly configService: AppConfigService,
     private readonly logger: CustomLoggerService,
   ) {
+    const cloudinaryConfig = this.configService.cloudinaryConfig;
     cloudinary.config({
-      cloud_name: this.configService.get<string>('CLOUDINARY_CLOUD_NAME'),
-      api_key: this.configService.get<string>('CLOUDINARY_API_KEY'),
-      api_secret: this.configService.get<string>('CLOUDINARY_API_SECRET'),
+      cloud_name: cloudinaryConfig.cloudName,
+      api_key: cloudinaryConfig.apiKey,
+      api_secret: cloudinaryConfig.apiSecret,
     });
   }
 

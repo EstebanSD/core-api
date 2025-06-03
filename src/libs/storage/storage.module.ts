@@ -1,5 +1,5 @@
 import { Module, DynamicModule } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AppConfigModule, AppConfigService } from 'src/config';
 import { CustomLoggerService } from 'src/common/logger/custom-logger.service';
 import { CloudinaryService, LocalStorageService, S3Service } from './providers';
 
@@ -8,12 +8,12 @@ export class StorageModule {
   static registerAsync(): DynamicModule {
     return {
       module: StorageModule,
-      imports: [ConfigModule],
+      imports: [AppConfigModule],
       providers: [
         {
           provide: 'IStorageService',
-          useFactory: (configService: ConfigService, logger: CustomLoggerService) => {
-            const provider = configService.get<string>('STORAGE_PROVIDER');
+          useFactory: (configService: AppConfigService, logger: CustomLoggerService) => {
+            const provider = configService.storageProvider;
 
             switch (provider) {
               case 's3':
@@ -24,7 +24,7 @@ export class StorageModule {
                 return new LocalStorageService(configService, logger);
             }
           },
-          inject: [ConfigService, CustomLoggerService],
+          inject: [AppConfigService, CustomLoggerService],
         },
       ],
       exports: ['IStorageService'],

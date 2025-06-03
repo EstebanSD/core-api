@@ -1,4 +1,4 @@
-import { ConfigService } from '@nestjs/config';
+import { AppConfigService } from 'src/config';
 import { IStorageService, UploadedFile, UploadFileParams } from '../interfaces';
 import { CustomLoggerService } from 'src/common/logger/custom-logger.service';
 import { promises as fs } from 'fs';
@@ -10,7 +10,7 @@ export class LocalStorageService implements IStorageService {
   private uploadPath = path.resolve(process.cwd(), 'uploads');
 
   constructor(
-    private readonly configService: ConfigService,
+    private readonly configService: AppConfigService,
     private readonly logger: CustomLoggerService,
   ) {}
 
@@ -26,7 +26,7 @@ export class LocalStorageService implements IStorageService {
       await fs.mkdir(this.uploadPath, { recursive: true });
       await fs.writeFile(fullPath, fileBuffer);
 
-      const base_url = this.configService.get<string>('BASE_URL') || 'http://localhost:8080';
+      const base_url = this.configService.baseUrl;
       return {
         url: `${base_url}/uploads/${fullFilename}`,
         publicId: fullFilename,
