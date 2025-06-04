@@ -1,20 +1,19 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import mongoose, { HydratedDocument } from 'mongoose';
 import { PROJECT_STATUSES, PROJECT_TYPES, ProjectStatus, ProjectType } from 'src/types/portfolio';
 import { TECH_STACK, TechStack } from 'src/types';
 import { Image } from 'src/common/schemas';
 
+export type ProjectGeneralDocument = HydratedDocument<ProjectGeneral>;
+export type ProjectTranslationDocument = HydratedDocument<ProjectTranslation>;
+
+export type ProjectDocument = ProjectTranslationDocument & { general: ProjectGeneralDocument };
+export type ProjectPlain = Omit<ProjectTranslation, 'general'> & {
+  general: ProjectGeneral & { _id: string };
+};
+
 @Schema({ timestamps: true })
-export class Project {
-  @Prop({ required: true })
-  locale: string;
-
-  @Prop({ required: true })
-  title: string;
-
-  @Prop({ required: true })
-  description: string;
-
+export class ProjectGeneral {
   @Prop({ required: true, enum: PROJECT_STATUSES })
   status: ProjectStatus;
 
@@ -46,10 +45,23 @@ export class Project {
   images?: Image[];
 }
 
-export const ProjectSchema = SchemaFactory.createForClass(Project);
+export const ProjectGeneralSchema = SchemaFactory.createForClass(ProjectGeneral);
 
-ProjectSchema.index({ title: 1, locale: 1 }, { unique: true }); // Ensure unique title per locale
+@Schema({ timestamps: true })
+export class ProjectTranslation {
+  @Prop({ required: true })
+  locale: string;
 
-// ProjectSchema.index({ locale: 1 }); // maybe
+  @Prop({ required: true })
+  title: string;
 
-export type ProjectDocument = HydratedDocument<Project>;
+  @Prop({ required: true })
+  description: string;
+
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'ProjectGeneral', required: true })
+  general: mongoose.Types.ObjectId;
+}
+
+export const ProjectTranslationSchema = SchemaFactory.createForClass(ProjectTranslation);
+
+ProjectTranslationSchema.index({ title: 1, locale: 1 }, { unique: true }); // Ensure unique title per locale
