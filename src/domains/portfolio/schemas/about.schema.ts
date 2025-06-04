@@ -54,3 +54,7 @@ export type About = {
 
 export type AboutGeneralDocument = HydratedDocument<AboutGeneral>;
 export type AboutTranslationDocument = HydratedDocument<AboutTranslation>;
+
+// TODO
+// export type AboutDocument = AboutTranslationDocument & { generalInfo: AboutGeneralDocument };
+// export type AboutPlain = Omit<AboutTranslation, 'generalInfo'> & { generalInfo: AboutGeneral };

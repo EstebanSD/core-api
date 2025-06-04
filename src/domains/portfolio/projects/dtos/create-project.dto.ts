@@ -46,9 +46,8 @@ export class CreateProjectDto {
   @IsIn(PROJECT_TYPES)
   type: ProjectType;
 
-  @IsOptional()
   @IsDateString()
-  startDate?: Date;
+  startDate: Date;
 
   @IsOptional()
   @IsDateString()

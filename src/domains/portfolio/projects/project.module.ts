@@ -2,12 +2,20 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ProjectService } from './project.service';
 import { ProjectController } from './project.controller';
-import { Project, ProjectSchema } from '../schemas/project.schema';
+import {
+  ProjectGeneral,
+  ProjectGeneralSchema,
+  ProjectTranslation,
+  ProjectTranslationSchema,
+} from '../schemas/project.schema';
 import { StorageModule } from 'src/libs/storage/storage.module';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Project.name, schema: ProjectSchema }]),
+    MongooseModule.forFeature([
+      { name: ProjectGeneral.name, schema: ProjectGeneralSchema },
+      { name: ProjectTranslation.name, schema: ProjectTranslationSchema },
+    ]),
     StorageModule.registerAsync(),
   ],
   controllers: [ProjectController],

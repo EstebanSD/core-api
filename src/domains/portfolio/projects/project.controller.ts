@@ -1,7 +1,16 @@
-import { Controller, Get, Post, Body, Query, UploadedFiles, Patch, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Query,
+  UploadedFiles,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { ProjectService } from './project.service';
-import { Project } from '../schemas/project.schema';
-import { CreateProjectDto, UpdateProjectDto, FindProjectsDto } from './dtos';
+import { CreateProjectDto, UpdateProjectDto, FindProjectsDto, AddTranslationDto } from './dtos';
 import { MultiImageUploadInterceptor } from 'src/common/interceptors';
 
 @Controller('portfolio/projects')
@@ -9,8 +18,13 @@ export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
   @Get()
-  findAll(@Query() query: FindProjectsDto): Promise<Project[]> {
+  findAll(@Query() query: FindProjectsDto) {
     return this.projectService.findAll(query);
+  }
+
+  @Get(':translationId')
+  findOne(@Param('translationId') id: string) {
+    return this.projectService.findOne(id);
   }
 
   @Post()
@@ -26,10 +40,10 @@ export class ProjectController {
     );
   }
 
-  @Patch(':id')
+  @Patch(':translationId')
   @MultiImageUploadInterceptor('files', 5, 4)
   update(
-    @Param('id') id: string,
+    @Param('translationId') id: string,
     @Body() body: UpdateProjectDto,
     @UploadedFiles() files: Express.Multer.File[],
   ) {
@@ -42,5 +56,20 @@ export class ProjectController {
         mimetype: file.mimetype,
       })),
     );
+  }
+
+  @Post(':generalId/locale')
+  addTranslation(@Param('generalId') id: string, @Body() body: AddTranslationDto) {
+    return this.projectService.addTranslation(id, body);
+  }
+
+  @Delete(':generalId')
+  deleteAll(@Param('generalId') id: string) {
+    return this.projectService.deleteProject(id);
+  }
+
+  @Delete(':generalId/locale/:locale')
+  deleteOne(@Param('generalId') id: string, @Param('locale') locale: string) {
+    return this.projectService.deleteTranslation(id, locale);
   }
 }
