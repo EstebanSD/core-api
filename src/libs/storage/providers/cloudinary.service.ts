@@ -69,11 +69,11 @@ export class CloudinaryService implements IStorageService {
 
   async deleteFile(publicId: string): Promise<void> {
     try {
-      const result = (await cloudinary.uploader.destroy(publicId)) as CloudinaryDestroyResponse;
+      const { result } = (await cloudinary.uploader.destroy(publicId)) as CloudinaryDestroyResponse;
 
-      if (result.result !== 'ok') {
+      if (result !== 'ok') {
         this.logger.warn(
-          `Cloudinary responded with "${result.result}" while deleting image with publicId: ${publicId}.`,
+          `Cloudinary responded with "${result}" while deleting image with publicId: ${publicId}.`,
           'CloudinaryService',
         );
       }
