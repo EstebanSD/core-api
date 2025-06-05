@@ -3,6 +3,12 @@ import { HydratedDocument, Types } from 'mongoose';
 import { Image } from 'src/common/schemas';
 import { LOCALE_ENUM } from 'src/types';
 
+export type AboutGeneralDocument = HydratedDocument<AboutGeneral>;
+export type AboutTranslationDocument = HydratedDocument<AboutTranslation>;
+
+export type AboutDocument = AboutTranslationDocument & { generalInfo: AboutGeneralDocument };
+export type AboutPlain = Omit<AboutTranslation, 'generalInfo'> & { generalInfo: AboutGeneral };
+
 @Schema({ timestamps: true })
 export class AboutGeneral {
   @Prop({ type: Image })
@@ -42,19 +48,3 @@ export class AboutTranslation {
 }
 
 export const AboutTranslationSchema = SchemaFactory.createForClass(AboutTranslation);
-
-export type About = {
-  locale: string;
-  fullName: string;
-  role: string;
-  bio: string;
-  image?: string;
-  socialLinks?: Record<string, string>;
-};
-
-export type AboutGeneralDocument = HydratedDocument<AboutGeneral>;
-export type AboutTranslationDocument = HydratedDocument<AboutTranslation>;
-
-// TODO
-// export type AboutDocument = AboutTranslationDocument & { generalInfo: AboutGeneralDocument };
-// export type AboutPlain = Omit<AboutTranslation, 'generalInfo'> & { generalInfo: AboutGeneral };
