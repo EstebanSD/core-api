@@ -19,9 +19,10 @@ export class CustomLoggerService extends ConsoleLogger {
       : ['error', 'warn', 'log', 'debug', 'verbose'];
   }
 
-  log(message: string, context?: string) {
-    super.log(this.formatLog(message, context));
+  log(message: string, traceOrError?: unknown, context?: string) {
+    super.log(this.composeMessage(message, traceOrError, context));
   }
+
   error(message: string, traceOrError?: unknown, context?: string) {
     let trace: string | undefined;
 
@@ -33,14 +34,29 @@ export class CustomLoggerService extends ConsoleLogger {
 
     super.error(this.formatLog(message, context), trace);
   }
-  warn(message: string, context?: string) {
-    super.warn(this.formatLog(message, context));
+
+  warn(message: string, traceOrError?: unknown, context?: string) {
+    super.warn(this.composeMessage(message, traceOrError, context));
   }
-  debug(message: string, context?: string) {
-    super.debug(this.formatLog(message, context));
+
+  debug(message: string, traceOrError?: unknown, context?: string) {
+    super.debug(this.composeMessage(message, traceOrError, context));
   }
-  verbose(message: string, context?: string) {
-    super.verbose(this.formatLog(message, context));
+
+  verbose(message: string, traceOrError?: unknown, context?: string) {
+    super.verbose(this.composeMessage(message, traceOrError, context));
+  }
+
+  private composeMessage(message: string, traceOrError?: unknown, context?: string) {
+    let trace = '';
+
+    if (typeof traceOrError === 'string') {
+      trace = `\n${traceOrError}`;
+    } else if (this.isErrorWithStack(traceOrError)) {
+      trace = `\n${traceOrError.stack}`;
+    }
+
+    return this.formatLog(message, context) + trace;
   }
 
   private formatLog(message: string, context?: string) {

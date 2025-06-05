@@ -4,11 +4,8 @@ import { AppConfigService } from 'src/config';
 import { v2 as cloudinary, UploadApiOptions } from 'cloudinary';
 import { CustomLoggerService } from 'src/common/logger/custom-logger.service';
 import { IStorageService, UploadedFile, UploadFileParams } from '../interfaces';
+import { v4 as uuid } from 'uuid';
 import * as path from 'path';
-
-type CloudinaryDestroyResponse = {
-  result: 'ok' | 'not found' | 'error';
-};
 
 @Injectable()
 export class CloudinaryService implements IStorageService {
@@ -28,9 +25,10 @@ export class CloudinaryService implements IStorageService {
     const { fileBuffer, filename, mimetype, folder, resourceType = 'auto' } = params;
     try {
       const nameWithoutExt = path.parse(filename).name;
+      const uniqueName = `${nameWithoutExt}-${uuid()}`;
       const uploadOptions: UploadApiOptions = {
         resource_type: resourceType,
-        public_id: nameWithoutExt,
+        public_id: uniqueName,
         folder,
         format: mimetype.split('/')[1],
       };
@@ -60,21 +58,20 @@ export class CloudinaryService implements IStorageService {
 
       return await uploadStream();
     } catch (error) {
-      this.logger.error('Error uploading image', error);
+      this.logger.error('Error uploading image', error, 'CloudinaryService');
       throw new InternalServerErrorException('Failed to upload image');
     }
   }
 
   async deleteFile(publicId: string): Promise<void> {
     try {
-      const result = (await cloudinary.uploader.destroy(publicId)) as CloudinaryDestroyResponse;
-
-      if (result.result !== 'ok') {
-        throw new Error(`Failed to delete image with publicId ${publicId}`);
-      }
+      await cloudinary.uploader.destroy(publicId);
     } catch (error) {
-      this.logger.error(`Error deleting image`, error);
-      throw new InternalServerErrorException('Failed to delete image');
+      this.logger.warn(
+        `Failed to delete image with publicId: ${publicId}.`,
+        error,
+        'CloudinaryService',
+      );
     }
   }
 }
