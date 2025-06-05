@@ -34,7 +34,7 @@ export class LocalStorageService implements IStorageService {
         resourceType: 'raw',
       };
     } catch (error) {
-      this.logger.error('Error uploading image', error);
+      this.logger.error('Error uploading image', error, 'LocalStorageService');
       throw new InternalServerErrorException('Failed to upload image');
     }
   }
@@ -44,8 +44,11 @@ export class LocalStorageService implements IStorageService {
       const fullPath = path.join(this.uploadPath, publicId);
       await fs.unlink(fullPath).catch(() => {});
     } catch (error) {
-      this.logger.error(`Error deleting image`, error);
-      throw new InternalServerErrorException('Failed to delete image');
+      this.logger.warn(
+        `Failed to delete image with publicId: ${publicId}.`,
+        error,
+        'LocalStorageService',
+      );
     }
   }
 }
