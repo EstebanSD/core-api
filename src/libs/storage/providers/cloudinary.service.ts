@@ -7,6 +7,10 @@ import { IStorageService, UploadedFile, UploadFileParams } from '../interfaces';
 import { v4 as uuid } from 'uuid';
 import * as path from 'path';
 
+type CloudinaryDestroyResponse = {
+  result: 'ok' | 'not found' | 'error';
+};
+
 @Injectable()
 export class CloudinaryService implements IStorageService {
   constructor(
@@ -65,7 +69,14 @@ export class CloudinaryService implements IStorageService {
 
   async deleteFile(publicId: string): Promise<void> {
     try {
-      await cloudinary.uploader.destroy(publicId);
+      const result = (await cloudinary.uploader.destroy(publicId)) as CloudinaryDestroyResponse;
+
+      if (result.result !== 'ok') {
+        this.logger.warn(
+          `Cloudinary responded with "${result.result}" while deleting image with publicId: ${publicId}.`,
+          'CloudinaryService',
+        );
+      }
     } catch (error) {
       this.logger.warn(
         `Failed to delete image with publicId: ${publicId}.`,
