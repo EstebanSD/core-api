@@ -56,7 +56,7 @@ export class ProjectService {
     return populated.toObject() as unknown as ProjectPlain;
   }
 
-  async findAll(query: FindProjectsDto): Promise<ProjectPlain[]> {
+  async findAll(query: FindProjectsDto): Promise<Record<string, ProjectPlain[]>> {
     const { locale, status, type } = query;
 
     const filter: Record<string, string> = {};
@@ -76,22 +76,30 @@ export class ProjectService {
 
     const filtered = translations.filter((t) => t.general);
 
-    return filtered.map((t) => ({
-      ...t,
-      general: {
-        ...(t.general as ProjectGeneral),
-        _id: t.general?._id.toString(),
-      },
-    }));
+    const grouped: Record<string, ProjectPlain[]> = {};
+    for (const t of filtered) {
+      const generalId = t.general._id.toString();
+      if (!grouped[generalId]) grouped[generalId] = [];
+
+      grouped[generalId].push({
+        ...t,
+        general: {
+          ...(t.general as ProjectGeneral),
+          _id: generalId,
+        },
+      });
+    }
+
+    return grouped;
   }
 
-  async findOne(translationId: string): Promise<ProjectPlain> {
+  async findOne(generalId: string, locale: string): Promise<ProjectPlain> {
     const translation = await this.translationModel
-      .findById(translationId)
+      .findOne({ general: generalId, locale })
       .populate<ProjectDocument>('general')
       .exec();
 
-    if (!translation) {
+    if (!translation || !translation.general) {
       throw new NotFoundException('Project not found');
     }
     return translation.toObject() as unknown as ProjectPlain;
