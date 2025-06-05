@@ -22,9 +22,9 @@ export class ProjectController {
     return this.projectService.findAll(query);
   }
 
-  @Get(':translationId')
-  findOne(@Param('translationId') id: string) {
-    return this.projectService.findOne(id);
+  @Get(':generalId/locale/:locale')
+  findOne(@Param('generalId') generalId: string, @Param('locale') locale: string) {
+    return this.projectService.findOne(generalId, locale);
   }
 
   @Post()
