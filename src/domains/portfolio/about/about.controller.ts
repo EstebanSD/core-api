@@ -13,7 +13,7 @@ export class AboutController {
   }
 
   @Post()
-  @ImageUploadInterceptor('file', 2)
+  @ImageUploadInterceptor({ deniedTypes: ['image/svg+xml'] })
   create(@Body() body: CreateAboutDto, @UploadedFile() file: Express.Multer.File) {
     return this.service.createByLocale(body, {
       fileBuffer: file?.buffer,
@@ -23,7 +23,7 @@ export class AboutController {
   }
 
   @Patch(':locale')
-  @ImageUploadInterceptor('file', 2)
+  @ImageUploadInterceptor({ deniedTypes: ['image/svg+xml'] })
   update(
     @Param('locale') locale: string,
     @Body() body: UpdateAboutDto,

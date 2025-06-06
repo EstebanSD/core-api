@@ -2,7 +2,21 @@ import { BadRequestException, UseInterceptors, applyDecorators } from '@nestjs/c
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 
-export function ImageUploadInterceptor(fieldName = 'file', maxSizeMB = 2) {
+type SingleParams = {
+  fieldName?: string;
+  maxSizeMB?: number;
+  allowedTypes?: string[];
+  deniedTypes?: string[];
+};
+
+export function ImageUploadInterceptor(params: SingleParams = {}) {
+  const {
+    fieldName = 'file',
+    maxSizeMB = 2,
+    allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'],
+    deniedTypes = [],
+  } = params;
+
   return applyDecorators(
     UseInterceptors(
       FileInterceptor(fieldName, {
@@ -11,9 +25,24 @@ export function ImageUploadInterceptor(fieldName = 'file', maxSizeMB = 2) {
           fileSize: maxSizeMB * 1024 * 1024,
         },
         fileFilter: (req, file, cb) => {
-          if (!file.mimetype.startsWith('image/')) {
-            return cb(new BadRequestException('Only image files are allowed'), false);
+          const { mimetype } = file;
+
+          if (deniedTypes.includes(mimetype)) {
+            return cb(
+              new BadRequestException(`Image type "${mimetype}" is explicitly denied.`),
+              false,
+            );
           }
+
+          if (!allowedTypes.includes(mimetype)) {
+            return cb(
+              new BadRequestException(
+                `Unsupported image type: "${mimetype}". Allowed: ${allowedTypes.join(', ')}`,
+              ),
+              false,
+            );
+          }
+
           cb(null, true);
         },
       }),

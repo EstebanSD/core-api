@@ -28,7 +28,7 @@ export class ProjectController {
   }
 
   @Post()
-  @MultiImageUploadInterceptor('files', 5, 4)
+  @MultiImageUploadInterceptor({ maxCount: 5, maxSizeMB: 4, deniedTypes: ['image/svg+xml'] })
   create(@Body() body: CreateProjectDto, @UploadedFiles() files: Express.Multer.File[]) {
     return this.projectService.create(
       body,
@@ -41,7 +41,7 @@ export class ProjectController {
   }
 
   @Patch(':translationId')
-  @MultiImageUploadInterceptor('files', 5, 4)
+  @MultiImageUploadInterceptor({ maxCount: 5, maxSizeMB: 4, deniedTypes: ['image/svg+xml'] })
   update(
     @Param('translationId') id: string,
     @Body() body: UpdateProjectDto,
