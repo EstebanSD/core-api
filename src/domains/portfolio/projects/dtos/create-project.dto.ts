@@ -9,7 +9,7 @@ import {
   IsIn,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { LOCALE_ENUM, TECH_STACK, TechStack } from 'src/types';
+import { LOCALE_ENUM, LocaleType, TECH_STACK, TechStack } from 'src/types';
 import { PROJECT_STATUSES, PROJECT_TYPES, ProjectStatus, ProjectType } from 'src/types/portfolio';
 
 class ProjectLinksDto {
@@ -26,7 +26,7 @@ export class CreateProjectDto {
   @IsString()
   @IsNotEmpty()
   @IsIn(LOCALE_ENUM)
-  locale: string;
+  locale: LocaleType;
 
   @IsString()
   @IsNotEmpty()

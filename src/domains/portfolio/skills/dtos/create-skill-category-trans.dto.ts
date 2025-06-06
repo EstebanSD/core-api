@@ -1,17 +1,18 @@
 import { IsIn, IsNotEmpty, IsString } from 'class-validator';
+import { IsMongoId } from 'class-validator';
 import { LOCALE_ENUM, LocaleType } from 'src/types';
 
-export class AddTranslationDto {
-  @IsString()
+export class CreateSkillCategoryTranslationDto {
   @IsNotEmpty()
+  @IsMongoId()
+  generalId: string;
+
+  @IsNotEmpty()
+  @IsString()
   @IsIn(LOCALE_ENUM)
   locale: LocaleType;
 
-  @IsString()
   @IsNotEmpty()
-  title: string;
-
   @IsString()
-  @IsNotEmpty()
-  description: string;
+  name: string;
 }

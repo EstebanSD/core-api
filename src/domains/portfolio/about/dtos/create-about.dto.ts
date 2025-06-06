@@ -1,6 +1,6 @@
 import { Type } from 'class-transformer';
 import { IsIn, IsNotEmpty, IsOptional, IsString, IsUrl, ValidateNested } from 'class-validator';
-import { LOCALE_ENUM } from 'src/types';
+import { LOCALE_ENUM, LocaleType } from 'src/types';
 
 export class SocialLinksDto {
   @IsOptional()
@@ -16,7 +16,7 @@ export class CreateAboutDto {
   @IsString()
   @IsNotEmpty()
   @IsIn(LOCALE_ENUM)
-  locale: string;
+  locale: LocaleType;
 
   @IsString()
   @IsNotEmpty()
