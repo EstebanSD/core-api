@@ -1,9 +1,9 @@
-import { IStorageService, UploadFileParams } from '../interfaces';
+import { IStorageService, StorageUploadParams } from '../interfaces';
 
 export async function uploadMultiple(
   storageService: IStorageService,
   folder: string,
-  files: UploadFileParams[],
+  files: StorageUploadParams[],
 ): Promise<{ publicId: string; url: string }[]> {
   if (!files.length) return [];
 

@@ -8,7 +8,7 @@ import {
   ProjectTranslation,
   ProjectTranslationSchema,
 } from '../schemas/project.schema';
-import { StorageModule } from 'src/libs/storage/storage.module';
+import { StorageModule } from 'src/libs/storage';
 
 @Module({
   imports: [

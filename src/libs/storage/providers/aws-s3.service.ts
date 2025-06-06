@@ -1,5 +1,5 @@
 import { CustomLoggerService } from 'src/common/logger/custom-logger.service';
-import { IStorageService, UploadedFile, UploadFileParams } from '../interfaces';
+import { IStorageService, StorageFileMetadata, StorageUploadParams } from '../interfaces';
 
 /**
  * Temporary mock service for S3 storage.
@@ -8,7 +8,7 @@ import { IStorageService, UploadedFile, UploadFileParams } from '../interfaces';
 export class S3Service implements IStorageService {
   constructor(private readonly logger: CustomLoggerService) {}
 
-  async uploadFile(params: UploadFileParams): Promise<UploadedFile> {
+  async uploadFile(params: StorageUploadParams): Promise<StorageFileMetadata> {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     return {
       url: `http://localhost/mock-s3/${params.filename}`,

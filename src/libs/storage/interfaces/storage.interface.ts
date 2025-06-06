@@ -1,20 +1,6 @@
-export interface UploadFileParams {
-  fileBuffer: Buffer;
-  filename: string;
-  mimetype: string;
-  folder?: string;
-  resourceType?: 'image' | 'video' | 'raw';
-}
-
-export interface UploadedFile {
-  url: string;
-  publicId: string;
-  size?: number;
-  format?: string;
-  resourceType?: 'image' | 'video' | 'raw';
-}
+import { StorageUploadParams, StorageFileMetadata } from './upload-file.types';
 
 export interface IStorageService {
-  uploadFile(params: UploadFileParams): Promise<UploadedFile>;
+  uploadFile(params: StorageUploadParams): Promise<StorageFileMetadata>;
   deleteFile(fileKey: string): Promise<void>;
 }

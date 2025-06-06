@@ -3,7 +3,7 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { AppConfigService } from 'src/config';
 import { v2 as cloudinary, UploadApiOptions } from 'cloudinary';
 import { CustomLoggerService } from 'src/common/logger/custom-logger.service';
-import { IStorageService, UploadedFile, UploadFileParams } from '../interfaces';
+import { IStorageService, StorageFileMetadata, StorageUploadParams } from '../interfaces';
 import { v4 as uuid } from 'uuid';
 import * as path from 'path';
 
@@ -25,7 +25,7 @@ export class CloudinaryService implements IStorageService {
     });
   }
 
-  async uploadFile(params: UploadFileParams): Promise<UploadedFile> {
+  async uploadFile(params: StorageUploadParams): Promise<StorageFileMetadata> {
     const { fileBuffer, filename, mimetype, folder, resourceType = 'auto' } = params;
     try {
       const nameWithoutExt = path.parse(filename).name;
@@ -37,7 +37,7 @@ export class CloudinaryService implements IStorageService {
         format: mimetype.split('/')[1],
       };
 
-      const uploadStream = (): Promise<UploadedFile> => {
+      const uploadStream = (): Promise<StorageFileMetadata> => {
         return new Promise((resolve, reject) => {
           const stream = cloudinary.uploader.upload_stream(uploadOptions, (error, result) => {
             if (error || !result) {
