@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
+import { Image } from 'src/common/schemas';
 import { LOCALE_ENUM } from 'src/types';
 
 export type SkillCategoryGeneralDocument = HydratedDocument<SkillCategoryGeneral>;
@@ -45,8 +46,8 @@ export class SkillItem {
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'SkillCategoryGeneral', required: true })
   category: SkillCategoryGeneral;
 
-  @Prop()
-  iconUrl?: string;
+  @Prop({ type: Image })
+  iconUrl?: Image;
 }
 export const SkillItemSchema = SchemaFactory.createForClass(SkillItem);
 
