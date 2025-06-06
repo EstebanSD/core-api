@@ -7,10 +7,9 @@ import { AboutService } from './about.service';
 import { AboutGeneral, AboutTranslation } from '../schemas/about.schema';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { CreateAboutDto } from './dtos';
-import { UploadFileParams } from 'src/libs/storage/interfaces';
-import { uploadSingle } from 'src/libs/storage/helpers';
+import { StorageUploadParams, uploadSingle } from 'src/libs/storage';
 
-jest.mock('src/libs/storage/helpers', () => ({
+jest.mock('src/libs/storage', () => ({
   uploadSingle: jest.fn(),
 }));
 
@@ -140,7 +139,7 @@ describe('AboutService', () => {
       },
     };
 
-    const mockFile: UploadFileParams = {
+    const mockFile: StorageUploadParams = {
       fileBuffer: Buffer.from('dummy'),
       filename: 'photo.jpg',
       mimetype: 'image/jpeg',
@@ -205,7 +204,7 @@ describe('AboutService', () => {
       },
     };
 
-    const mockFile: UploadFileParams = {
+    const mockFile: StorageUploadParams = {
       fileBuffer: Buffer.from('dummy'),
       filename: 'updated.jpg',
       mimetype: 'image/jpeg',
@@ -269,7 +268,7 @@ describe('AboutService', () => {
         exec: jest.fn().mockResolvedValue(generalDoc),
       });
 
-      await service.updateByLocale('en', mockDto, {} as UploadFileParams);
+      await service.updateByLocale('en', mockDto, {} as StorageUploadParams);
 
       expect(saveTranslationMock).toHaveBeenCalled();
       expect(saveGeneralMock).toHaveBeenCalled();

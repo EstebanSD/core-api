@@ -9,8 +9,7 @@ import {
   AboutTranslationDocument,
 } from '../schemas/about.schema';
 import { CreateAboutDto, UpdateAboutDto } from './dtos';
-import { IStorageService, UploadFileParams } from 'src/libs/storage/interfaces';
-import { uploadSingle } from 'src/libs/storage/helpers';
+import { IStorageService, StorageUploadParams, uploadSingle } from 'src/libs/storage';
 
 @Injectable()
 export class AboutService {
@@ -34,7 +33,7 @@ export class AboutService {
     };
   }
 
-  async createByLocale(body: CreateAboutDto, file: UploadFileParams): Promise<AboutPlain> {
+  async createByLocale(body: CreateAboutDto, file: StorageUploadParams): Promise<AboutPlain> {
     const exists = await this.translationModel.findOne({ locale: body.locale }).exec();
     if (exists) {
       throw new ConflictException(`About info already exists for locale "${body.locale}"`);
@@ -77,7 +76,7 @@ export class AboutService {
   async updateByLocale(
     locale: string,
     body: UpdateAboutDto,
-    file: UploadFileParams,
+    file: StorageUploadParams,
   ): Promise<AboutPlain> {
     const translation = await this.translationModel.findOne({ locale }).exec();
     if (!translation) {
