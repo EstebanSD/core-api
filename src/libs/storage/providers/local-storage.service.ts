@@ -1,5 +1,5 @@
 import { AppConfigService } from 'src/config';
-import { IStorageService, UploadedFile, UploadFileParams } from '../interfaces';
+import { IStorageService, StorageFileMetadata, StorageUploadParams } from '../interfaces';
 import { CustomLoggerService } from 'src/common/logger/custom-logger.service';
 import { promises as fs } from 'fs';
 import * as path from 'path';
@@ -14,7 +14,11 @@ export class LocalStorageService implements IStorageService {
     private readonly logger: CustomLoggerService,
   ) {}
 
-  async uploadFile({ fileBuffer, filename, mimetype }: UploadFileParams): Promise<UploadedFile> {
+  async uploadFile({
+    fileBuffer,
+    filename,
+    mimetype,
+  }: StorageUploadParams): Promise<StorageFileMetadata> {
     try {
       const id = uuid();
       const ext =

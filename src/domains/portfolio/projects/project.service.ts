@@ -10,8 +10,7 @@ import {
   ProjectTranslationDocument,
 } from '../schemas/project.schema';
 import { CreateProjectDto, UpdateProjectDto, FindProjectsDto, AddTranslationDto } from './dtos';
-import { IStorageService, UploadFileParams } from 'src/libs/storage/interfaces';
-import { uploadMultiple } from 'src/libs/storage/helpers';
+import { IStorageService, StorageUploadParams, uploadMultiple } from 'src/libs/storage';
 
 @Injectable()
 export class ProjectService {
@@ -22,7 +21,7 @@ export class ProjectService {
     @Inject('IStorageService') private readonly storageService: IStorageService,
   ) {}
 
-  async create(body: CreateProjectDto, files?: UploadFileParams[]): Promise<ProjectPlain> {
+  async create(body: CreateProjectDto, files?: StorageUploadParams[]): Promise<ProjectPlain> {
     const exists = await this.translationModel
       .findOne({ title: body.title, locale: body.locale })
       .exec();
@@ -108,7 +107,7 @@ export class ProjectService {
   async update(
     translationId: string,
     body: UpdateProjectDto,
-    files?: UploadFileParams[],
+    files?: StorageUploadParams[],
   ): Promise<ProjectPlain> {
     const translation = await this.translationModel
       .findById(translationId)

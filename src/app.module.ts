@@ -3,7 +3,7 @@ import { AppController } from './app.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ProjectModule } from './domains/portfolio/projects/project.module';
 import { AboutModule } from './domains/portfolio/about/about.module';
-import { StorageModule } from './libs/storage/storage.module';
+import { StorageModule } from './libs/storage';
 import { CustomLoggerModule } from './common/logger/custom-logger.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { AppConfig, AppConfigModule } from './config';
