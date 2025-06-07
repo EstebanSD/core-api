@@ -10,7 +10,7 @@ import {
 } from '../schemas/skill.schema';
 import { IStorageService } from 'src/libs/storage';
 import { SanitizerService } from 'src/libs/sanitizer';
-import { CreateSkillItemDto, UpdateSkillItemDto } from './dtos';
+import { CreateSkillItemDto, FilterItemDto, UpdateSkillItemDto } from './dtos';
 
 @Injectable()
 export class SkillItemService {
@@ -27,7 +27,7 @@ export class SkillItemService {
     body: CreateSkillItemDto,
     file: Express.Multer.File,
   ): Promise<SkillItemPlain> {
-    const category = await this.categoryGeneralModel.findById(categoryId);
+    const category = await this.categoryGeneralModel.findById(categoryId).exec();
     if (!category) {
       throw new NotFoundException(`Category with id "${categoryId}" not found`);
     }
@@ -67,7 +67,7 @@ export class SkillItemService {
     itemId: string,
     file?: Express.Multer.File,
   ): Promise<SkillItemPlain> {
-    const item = await this.itemModel.findById<SkillItemDocument>(itemId);
+    const item = await this.itemModel.findById<SkillItemDocument>(itemId).exec();
     if (!item) {
       throw new NotFoundException(`Skill item with id "${itemId}" not found`);
     }
@@ -102,5 +102,30 @@ export class SkillItemService {
 
     const updated = await item.save();
     return updated.toObject();
+  }
+
+  async findItemsByCategory(categoryId: string, filter: FilterItemDto): Promise<SkillItemPlain[]> {
+    const query: Record<string, any> = { category: categoryId };
+
+    if (filter.name) {
+      query.name = { $regex: filter.name, $options: 'i' };
+    }
+
+    const items = await this.itemModel.find(query).sort({ name: 1 }).exec();
+
+    return items.map((item) => item.toObject());
+  }
+
+  async deleteItem(itemId: string): Promise<void> {
+    const item = await this.itemModel.findById(itemId).exec();
+    if (!item) {
+      throw new NotFoundException(`Skill item with id "${itemId}" not found`);
+    }
+
+    if (item.iconUrl?.publicId) {
+      await this.storageService.deleteFile(item.iconUrl.publicId);
+    }
+
+    await this.itemModel.deleteOne({ _id: itemId }).exec();
   }
 }
