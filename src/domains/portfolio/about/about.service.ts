@@ -9,7 +9,7 @@ import {
   AboutTranslationDocument,
 } from '../schemas/about.schema';
 import { CreateAboutDto, UpdateAboutDto } from './dtos';
-import { IStorageService, StorageUploadParams, uploadSingle } from 'src/libs/storage';
+import { IStorageService } from 'src/libs/storage';
 import { LocaleType } from 'src/types';
 
 @Injectable()
@@ -34,7 +34,7 @@ export class AboutService {
     };
   }
 
-  async createByLocale(body: CreateAboutDto, file: StorageUploadParams): Promise<AboutPlain> {
+  async createByLocale(body: CreateAboutDto, file?: Express.Multer.File): Promise<AboutPlain> {
     const exists = await this.translationModel.findOne({ locale: body.locale }).exec();
     if (exists) {
       throw new ConflictException(`About info already exists for locale "${body.locale}"`);
@@ -42,16 +42,21 @@ export class AboutService {
 
     let general: AboutGeneralDocument | null = await this.generalModel.findOne().exec();
     if (!general) {
-      const imageData = await uploadSingle(
-        this.storageService,
-        'portfolio/about',
-        file.fileBuffer,
-        file.filename,
-        file.mimetype,
-      );
+      let imageData: { publicId: string; url: string } | null = null;
+
+      if (file) {
+        const { publicId, url } = await this.storageService.uploadFile({
+          fileBuffer: file.buffer,
+          filename: file.originalname,
+          mimetype: file.mimetype,
+          folder: 'portfolio/about',
+        });
+
+        imageData = { publicId, url };
+      }
 
       general = new this.generalModel({
-        image: imageData ?? undefined,
+        image: imageData,
         socialLinks: body.socialLinks,
       });
 
@@ -77,7 +82,7 @@ export class AboutService {
   async updateByLocale(
     locale: LocaleType,
     body: UpdateAboutDto,
-    file: StorageUploadParams,
+    file?: Express.Multer.File,
   ): Promise<AboutPlain> {
     const translation = await this.translationModel.findOne({ locale }).exec();
     if (!translation) {
@@ -98,23 +103,19 @@ export class AboutService {
       ...(bio && { bio }),
     });
 
-    const hasNewImage = file.fileBuffer && file.filename && file.mimetype;
-
-    if (hasNewImage) {
-      const imageData = await uploadSingle(
-        this.storageService,
-        'portfolio/about',
-        file.fileBuffer,
-        file.filename,
-        file.mimetype,
-      );
-
-      if (imageData) {
-        if (general.image?.publicId) {
-          await this.storageService.deleteFile(general.image.publicId);
-        }
-        general.image = imageData;
+    if (file) {
+      if (general.image?.publicId) {
+        await this.storageService.deleteFile(general.image.publicId);
       }
+
+      const { publicId, url } = await this.storageService.uploadFile({
+        fileBuffer: file.buffer,
+        filename: file.originalname,
+        mimetype: file.mimetype,
+        folder: 'portfolio/about',
+      });
+
+      general.image = { publicId, url };
     }
 
     if (body.socialLinks !== undefined) {

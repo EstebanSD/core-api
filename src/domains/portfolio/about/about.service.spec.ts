@@ -7,11 +7,6 @@ import { AboutService } from './about.service';
 import { AboutGeneral, AboutTranslation } from '../schemas/about.schema';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { CreateAboutDto } from './dtos';
-import { StorageUploadParams, uploadSingle } from 'src/libs/storage';
-
-jest.mock('src/libs/storage', () => ({
-  uploadSingle: jest.fn(),
-}));
 
 describe('AboutService', () => {
   let service: AboutService;
@@ -139,10 +134,17 @@ describe('AboutService', () => {
       },
     };
 
-    const mockFile: StorageUploadParams = {
-      fileBuffer: Buffer.from('dummy'),
-      filename: 'photo.jpg',
+    const mockFile: Express.Multer.File = {
+      buffer: Buffer.from('dummy'),
+      originalname: 'photo.jpg',
       mimetype: 'image/jpeg',
+      fieldname: 'image',
+      size: 1234,
+      encoding: '7bit',
+      destination: '',
+      filename: '',
+      path: '',
+      stream: null as any,
     };
 
     it('should throw ConflictException if translation already exists', async () => {
@@ -173,7 +175,7 @@ describe('AboutService', () => {
       mockTranslationModel.findOne.mockReturnValueOnce({ exec: jest.fn().mockResolvedValue(null) });
       mockGeneralModel.findOne.mockReturnValueOnce({ exec: jest.fn().mockResolvedValue(null) });
 
-      (uploadSingle as jest.Mock).mockResolvedValueOnce({
+      mockStorageService.upload.mockResolvedValueOnce({
         publicId: '123',
         url: 'http://image.com/photo.jpg',
       });
@@ -186,7 +188,7 @@ describe('AboutService', () => {
 
       await service.createByLocale(mockDto, mockFile);
 
-      expect(uploadSingle).toHaveBeenCalled();
+      expect(mockStorageService.upload).toHaveBeenCalled();
       expect(saveGeneralMock).toHaveBeenCalled();
       expect(saveTranslationMock).toHaveBeenCalled();
     });
@@ -204,10 +206,17 @@ describe('AboutService', () => {
       },
     };
 
-    const mockFile: StorageUploadParams = {
-      fileBuffer: Buffer.from('dummy'),
-      filename: 'updated.jpg',
+    const mockFile: Express.Multer.File = {
+      buffer: Buffer.from('dummy'),
+      originalname: 'photo.jpg',
       mimetype: 'image/jpeg',
+      fieldname: 'image',
+      size: 1234,
+      encoding: '7bit',
+      destination: '',
+      filename: '',
+      path: '',
+      stream: null as any,
     };
 
     it('should throw NotFoundException if translation does not exist', async () => {
@@ -268,7 +277,7 @@ describe('AboutService', () => {
         exec: jest.fn().mockResolvedValue(generalDoc),
       });
 
-      await service.updateByLocale('en', mockDto, {} as StorageUploadParams);
+      await service.updateByLocale('en', mockDto, undefined);
 
       expect(saveTranslationMock).toHaveBeenCalled();
       expect(saveGeneralMock).toHaveBeenCalled();
@@ -299,14 +308,14 @@ describe('AboutService', () => {
         exec: jest.fn().mockResolvedValue(generalDoc),
       });
 
-      (uploadSingle as jest.Mock).mockResolvedValueOnce({
-        publicId: 'uploaded-id',
-        url: 'http://image.com/new.jpg',
+      mockStorageService.upload.mockResolvedValueOnce({
+        publicId: '123',
+        url: 'http://image.com/photo.jpg',
       });
 
       await service.updateByLocale('en', mockDto, mockFile);
 
-      expect(uploadSingle).toHaveBeenCalled();
+      expect(mockStorageService.upload).toHaveBeenCalled();
       expect(saveTranslationMock).toHaveBeenCalled();
       expect(saveGeneralMock).toHaveBeenCalled();
     });

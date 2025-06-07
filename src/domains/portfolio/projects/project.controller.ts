@@ -12,18 +12,24 @@ import {
 import { ProjectService } from './project.service';
 import { CreateProjectDto, UpdateProjectDto, FindProjectsDto, AddTranslationDto } from './dtos';
 import { MultiImageUploadInterceptor } from 'src/common/interceptors';
+import { LocaleType } from 'src/types';
 
 @Controller('portfolio/projects')
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
   @Get()
-  findAll(@Query() query: FindProjectsDto) {
-    return this.projectService.findAll(query);
+  findAllByLocale(@Query() query: FindProjectsDto) {
+    return this.projectService.findAllByLocale(query);
+  }
+
+  @Get('grouped')
+  findGroupedByGeneral(@Query() query: FindProjectsDto) {
+    return this.projectService.findGroupedByGeneral(query);
   }
 
   @Get(':generalId/locale/:locale')
-  findOne(@Param('generalId') generalId: string, @Param('locale') locale: string) {
+  findOne(@Param('generalId') generalId: string, @Param('locale') locale: LocaleType) {
     return this.projectService.findOne(generalId, locale);
   }
 
@@ -69,7 +75,7 @@ export class ProjectController {
   }
 
   @Delete(':generalId/locale/:locale')
-  deleteOne(@Param('generalId') id: string, @Param('locale') locale: string) {
+  deleteOne(@Param('generalId') id: string, @Param('locale') locale: LocaleType) {
     return this.projectService.deleteTranslation(id, locale);
   }
 }

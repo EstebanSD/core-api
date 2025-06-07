@@ -82,7 +82,7 @@ Create your .env based on the provided .env.example:
 
 ```bash
 
- npm run start:dev
+ npm run dev
 
 ```
 
