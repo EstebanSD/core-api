@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
 import { PROJECT_STATUSES, PROJECT_TYPES, ProjectStatus, ProjectType } from 'src/types/portfolio';
-import { TECH_STACK, TechStack } from 'src/types';
+import { LOCALE_ENUM, TECH_STACK, TechStack } from 'src/types';
 import { Image } from 'src/common/schemas';
 
 export type ProjectGeneralDocument = HydratedDocument<ProjectGeneral>;
@@ -49,7 +49,7 @@ export const ProjectGeneralSchema = SchemaFactory.createForClass(ProjectGeneral)
 
 @Schema({ timestamps: true })
 export class ProjectTranslation {
-  @Prop({ required: true })
+  @Prop({ type: String, enum: LOCALE_ENUM, required: true })
   locale: string;
 
   @Prop({ required: true })
