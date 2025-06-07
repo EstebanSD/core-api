@@ -10,6 +10,7 @@ import {
 } from '../schemas/about.schema';
 import { CreateAboutDto, UpdateAboutDto } from './dtos';
 import { IStorageService, StorageUploadParams, uploadSingle } from 'src/libs/storage';
+import { LocaleType } from 'src/types';
 
 @Injectable()
 export class AboutService {
@@ -20,7 +21,7 @@ export class AboutService {
     @Inject('IStorageService') private readonly storageService: IStorageService,
   ) {}
 
-  async getByLocale(locale: string): Promise<AboutPlain> {
+  async getByLocale(locale: LocaleType): Promise<AboutPlain> {
     const translation = await this.translationModel.findOne({ locale }).exec();
     if (!translation) throw new NotFoundException(`No about found for locale "${locale}"`);
 
@@ -74,7 +75,7 @@ export class AboutService {
   }
 
   async updateByLocale(
-    locale: string,
+    locale: LocaleType,
     body: UpdateAboutDto,
     file: StorageUploadParams,
   ): Promise<AboutPlain> {

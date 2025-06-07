@@ -11,6 +11,7 @@ import {
 } from '../schemas/project.schema';
 import { CreateProjectDto, UpdateProjectDto, FindProjectsDto, AddTranslationDto } from './dtos';
 import { IStorageService, StorageUploadParams, uploadMultiple } from 'src/libs/storage';
+import { LocaleType } from 'src/types';
 
 @Injectable()
 export class ProjectService {
@@ -55,7 +56,7 @@ export class ProjectService {
     return populated.toObject() as unknown as ProjectPlain;
   }
 
-  async findAll(query: FindProjectsDto): Promise<Record<string, ProjectPlain[]>> {
+  async findGroupedByGeneral(query: FindProjectsDto): Promise<Record<string, ProjectPlain[]>> {
     const { locale, status, type } = query;
 
     const filter: Record<string, string> = {};
@@ -73,11 +74,12 @@ export class ProjectService {
       .lean()
       .exec();
 
-    const filtered = translations.filter((t) => t.general);
-
     const grouped: Record<string, ProjectPlain[]> = {};
-    for (const t of filtered) {
+
+    for (const t of translations) {
+      if (!t.general) continue;
       const generalId = t.general._id.toString();
+
       if (!grouped[generalId]) grouped[generalId] = [];
 
       grouped[generalId].push({
@@ -92,7 +94,36 @@ export class ProjectService {
     return grouped;
   }
 
-  async findOne(generalId: string, locale: string): Promise<ProjectPlain> {
+  async findAllByLocale(query: FindProjectsDto): Promise<ProjectPlain[]> {
+    const { locale = 'en', status, type } = query;
+
+    const filter: Record<string, string> = {};
+    filter.locale = locale;
+
+    const translations = await this.translationModel
+      .find(filter)
+      .populate<ProjectDocument>({
+        path: 'general',
+        match: {
+          ...(status && { status }),
+          ...(type && { type }),
+        },
+      })
+      .lean()
+      .exec();
+
+    return translations
+      .filter((t) => t.general)
+      .map((t) => ({
+        ...t,
+        general: {
+          ...(t.general as ProjectGeneral),
+          _id: t.general._id.toString(),
+        },
+      }));
+  }
+
+  async findOne(generalId: string, locale: LocaleType): Promise<ProjectPlain> {
     const translation = await this.translationModel
       .findOne({ general: generalId, locale })
       .populate<ProjectDocument>('general')
@@ -196,7 +227,7 @@ export class ProjectService {
     await this.generalModel.findByIdAndDelete(general._id);
   }
 
-  async deleteTranslation(generalId: string, locale: string): Promise<void> {
+  async deleteTranslation(generalId: string, locale: LocaleType): Promise<void> {
     const translation = await this.translationModel
       .findOne({ locale, general: generalId })
       .populate<ProjectDocument>('general')
