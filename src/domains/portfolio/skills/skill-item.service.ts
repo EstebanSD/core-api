@@ -25,7 +25,7 @@ export class SkillItemService {
   async createItem(
     categoryId: string,
     body: CreateSkillItemDto,
-    file: Express.Multer.File,
+    file?: Express.Multer.File,
   ): Promise<SkillItemPlain> {
     const category = await this.categoryGeneralModel.findById(categoryId).exec();
     if (!category) {
