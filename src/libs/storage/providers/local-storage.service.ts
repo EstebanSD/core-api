@@ -5,6 +5,7 @@ import { promises as fs } from 'fs';
 import * as path from 'path';
 import { v4 as uuid } from 'uuid';
 import { InternalServerErrorException } from '@nestjs/common';
+import { getExtensionFromMime } from '../helpers';
 
 export class LocalStorageService implements IStorageService {
   private uploadPath = path.resolve(process.cwd(), 'uploads');
@@ -21,8 +22,7 @@ export class LocalStorageService implements IStorageService {
   }: StorageUploadParams): Promise<StorageFileMetadata> {
     try {
       const id = uuid();
-      const ext =
-        typeof mimetype === 'string' && mimetype.includes('/') ? mimetype.split('/')[1] : '';
+      const ext = getExtensionFromMime(mimetype);
       const nameWithoutExt = path.parse(filename).name;
       const fullFilename = `${id}-${nameWithoutExt}.${ext}`;
       const fullPath = path.join(this.uploadPath, fullFilename);
