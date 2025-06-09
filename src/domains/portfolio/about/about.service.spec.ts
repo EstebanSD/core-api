@@ -15,7 +15,7 @@ describe('AboutService', () => {
   let mockTranslationConstructor: jest.Mock;
   let mockGeneralConstructor: jest.Mock;
   const mockStorageService = {
-    upload: jest.fn(),
+    uploadFile: jest.fn(),
     deleteFile: jest.fn(),
   };
 
@@ -78,11 +78,15 @@ describe('AboutService', () => {
 
     it('should return merged about info if both documents are found', async () => {
       mockTranslationModel.findOne.mockReturnValueOnce({
-        exec: jest.fn().mockResolvedValue(mockTranslation),
+        lean: () => ({
+          exec: jest.fn().mockResolvedValue(mockTranslation),
+        }),
       });
 
       mockGeneralModel.findById.mockReturnValueOnce({
-        exec: jest.fn().mockResolvedValue(mockGeneral),
+        lean: () => ({
+          exec: jest.fn().mockResolvedValue(mockGeneral),
+        }),
       });
 
       const result = await service.getByLocale(mockLocale);
@@ -92,14 +96,15 @@ describe('AboutService', () => {
         fullName: mockTranslation.fullName,
         role: mockTranslation.role,
         bio: mockTranslation.bio,
-        image: mockGeneral.image.url,
-        socialLinks: mockGeneral.socialLinks,
+        generalInfo: mockGeneral,
       });
     });
 
     it('should throw NotFoundException if translation is not found', async () => {
       mockTranslationModel.findOne.mockReturnValueOnce({
-        exec: jest.fn().mockResolvedValue(null),
+        lean: () => ({
+          exec: jest.fn().mockResolvedValue(null),
+        }),
       });
 
       await expect(service.getByLocale(mockLocale)).rejects.toThrow(
@@ -109,11 +114,15 @@ describe('AboutService', () => {
 
     it('should throw NotFoundException if general info is not found', async () => {
       mockTranslationModel.findOne.mockReturnValueOnce({
-        exec: jest.fn().mockResolvedValue(mockTranslation),
+        lean: () => ({
+          exec: jest.fn().mockResolvedValue(mockTranslation),
+        }),
       });
 
       mockGeneralModel.findById.mockReturnValueOnce({
-        exec: jest.fn().mockResolvedValue(null),
+        lean: () => ({
+          exec: jest.fn().mockResolvedValue(null),
+        }),
       });
 
       await expect(service.getByLocale(mockLocale)).rejects.toThrow(
@@ -149,7 +158,9 @@ describe('AboutService', () => {
 
     it('should throw ConflictException if translation already exists', async () => {
       mockTranslationModel.findOne.mockReturnValueOnce({
-        exec: jest.fn().mockResolvedValue(true),
+        lean: () => ({
+          exec: jest.fn().mockResolvedValue(true),
+        }),
       });
 
       await expect(service.createByLocale(mockDto, mockFile)).rejects.toThrow(
@@ -158,39 +169,96 @@ describe('AboutService', () => {
     });
 
     it('should create only translation if general already exists', async () => {
-      mockTranslationModel.findOne.mockReturnValueOnce({ exec: jest.fn().mockResolvedValue(null) });
+      mockTranslationModel.findOne.mockReturnValueOnce({
+        lean: () => ({
+          exec: jest.fn().mockResolvedValue(null),
+        }),
+      });
       mockGeneralModel.findOne.mockReturnValueOnce({
-        exec: jest.fn().mockResolvedValue({ _id: 'some-general-id' }),
+        exec: jest.fn().mockResolvedValue({
+          _id: 'some-general-id',
+          toObject: () => ({
+            image: {
+              publicId: 'some-id',
+              url: 'https://some.com/image.jpg',
+            },
+            socialLinks: mockDto.socialLinks,
+          }),
+        }),
       });
 
-      const saveMock = jest.fn();
-      mockTranslationConstructor.mockImplementation(() => ({ save: saveMock }));
+      const mockTranslationDoc = {
+        toObject: () => ({
+          locale: mockDto.locale,
+          fullName: mockDto.fullName,
+          role: mockDto.role,
+          bio: mockDto.bio,
+          generalInfo: 'some-general-id',
+        }),
+        save: jest.fn(),
+      };
+      mockTranslationConstructor.mockImplementation(() => mockTranslationDoc);
 
-      await service.createByLocale(mockDto, mockFile);
+      const result = await service.createByLocale(mockDto, mockFile);
 
-      expect(saveMock).toHaveBeenCalled();
+      expect(mockTranslationDoc.save).toHaveBeenCalled();
+      expect(result).toEqual({
+        locale: mockDto.locale,
+        fullName: mockDto.fullName,
+        role: mockDto.role,
+        bio: mockDto.bio,
+        generalInfo: {
+          image: {
+            publicId: 'some-id',
+            url: 'https://some.com/image.jpg',
+          },
+          socialLinks: mockDto.socialLinks,
+        },
+      });
     });
 
     it('should upload image and create general + translation if general does not exist', async () => {
-      mockTranslationModel.findOne.mockReturnValueOnce({ exec: jest.fn().mockResolvedValue(null) });
+      mockTranslationModel.findOne.mockReturnValueOnce({
+        lean: () => ({
+          exec: jest.fn().mockResolvedValue(null),
+        }),
+      });
       mockGeneralModel.findOne.mockReturnValueOnce({ exec: jest.fn().mockResolvedValue(null) });
 
-      mockStorageService.upload.mockResolvedValueOnce({
+      mockStorageService.uploadFile.mockResolvedValueOnce({
         publicId: '123',
         url: 'http://image.com/photo.jpg',
       });
 
-      const saveGeneralMock = jest.fn().mockResolvedValue({ _id: 'new-general-id' });
-      mockGeneralConstructor.mockImplementation(() => ({ save: saveGeneralMock }));
+      const generalDocMock = {
+        toObject: () => ({
+          image: {
+            publicId: '123',
+            url: 'http://image.com/photo.jpg',
+          },
+          socialLinks: mockDto.socialLinks,
+        }),
+        save: jest.fn().mockResolvedValue({ _id: 'new-general-id' }),
+      };
+      mockGeneralConstructor.mockImplementation(() => generalDocMock);
 
-      const saveTranslationMock = jest.fn();
-      mockTranslationConstructor.mockImplementation(() => ({ save: saveTranslationMock }));
+      const translationDocMock = {
+        toObject: () => ({
+          locale: mockDto.locale,
+          fullName: mockDto.fullName,
+          role: mockDto.role,
+          bio: mockDto.bio,
+          generalInfo: 'new-general-id',
+        }),
+        save: jest.fn(),
+      };
+      mockTranslationConstructor.mockImplementation(() => translationDocMock);
 
       await service.createByLocale(mockDto, mockFile);
 
-      expect(mockStorageService.upload).toHaveBeenCalled();
-      expect(saveGeneralMock).toHaveBeenCalled();
-      expect(saveTranslationMock).toHaveBeenCalled();
+      expect(mockStorageService.uploadFile).toHaveBeenCalled();
+      expect(generalDocMock.save).toHaveBeenCalled();
+      expect(translationDocMock.save).toHaveBeenCalled();
     });
   });
 
@@ -262,11 +330,20 @@ describe('AboutService', () => {
         bio: '',
         save: saveTranslationMock,
         generalInfo: 'general-id',
+        toObject: () => ({
+          fullName: '',
+          role: '',
+          bio: '',
+          generalInfo: 'general-id',
+        }),
       };
 
       const generalDoc = {
         socialLinks: {},
         save: saveGeneralMock,
+        toObject: () => ({
+          socialLinks: {},
+        }),
       };
 
       mockTranslationModel.findOne.mockReturnValueOnce({
@@ -293,11 +370,20 @@ describe('AboutService', () => {
         bio: '',
         save: saveTranslationMock,
         generalInfo: 'general-id',
+        toObject: () => ({
+          fullName: '',
+          role: '',
+          bio: '',
+          generalInfo: 'general-id',
+        }),
       };
 
       const generalDoc = {
         socialLinks: {},
         save: saveGeneralMock,
+        toObject: () => ({
+          socialLinks: {},
+        }),
       };
 
       mockTranslationModel.findOne.mockReturnValueOnce({
@@ -308,14 +394,14 @@ describe('AboutService', () => {
         exec: jest.fn().mockResolvedValue(generalDoc),
       });
 
-      mockStorageService.upload.mockResolvedValueOnce({
+      mockStorageService.uploadFile.mockResolvedValueOnce({
         publicId: '123',
         url: 'http://image.com/photo.jpg',
       });
 
       await service.updateByLocale('en', mockDto, mockFile);
 
-      expect(mockStorageService.upload).toHaveBeenCalled();
+      expect(mockStorageService.uploadFile).toHaveBeenCalled();
       expect(saveTranslationMock).toHaveBeenCalled();
       expect(saveGeneralMock).toHaveBeenCalled();
     });

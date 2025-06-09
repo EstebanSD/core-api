@@ -103,8 +103,8 @@ describe('AboutController (e2e)', () => {
       expect(mockService.createByLocale).toHaveBeenCalledWith(
         expect.objectContaining(dto),
         expect.objectContaining({
-          fileBuffer: expect.any(Buffer),
-          filename: 'photo.jpg',
+          buffer: expect.any(Buffer),
+          originalname: 'photo.jpg',
           mimetype: 'image/jpeg',
         }),
       );

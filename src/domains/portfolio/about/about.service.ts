@@ -22,20 +22,20 @@ export class AboutService {
   ) {}
 
   async getByLocale(locale: LocaleType): Promise<AboutPlain> {
-    const translation = await this.translationModel.findOne({ locale }).exec();
+    const translation = await this.translationModel.findOne({ locale }).lean().exec();
     if (!translation) throw new NotFoundException(`No about found for locale "${locale}"`);
 
-    const generalInfo = await this.generalModel.findById(translation.generalInfo).exec();
+    const generalInfo = await this.generalModel.findById(translation.generalInfo).lean().exec();
     if (!generalInfo) throw new NotFoundException('General about info not found');
 
     return {
-      ...translation.toObject(),
-      generalInfo: generalInfo.toObject(),
+      ...translation,
+      generalInfo: generalInfo,
     };
   }
 
   async createByLocale(body: CreateAboutDto, file?: Express.Multer.File): Promise<AboutPlain> {
-    const exists = await this.translationModel.findOne({ locale: body.locale }).exec();
+    const exists = await this.translationModel.findOne({ locale: body.locale }).lean().exec();
     if (exists) {
       throw new ConflictException(`About info already exists for locale "${body.locale}"`);
     }
