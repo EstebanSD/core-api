@@ -25,6 +25,7 @@ export class ProjectService {
   async create(body: CreateProjectDto, files?: StorageUploadParams[]): Promise<ProjectPlain> {
     const exists = await this.translationModel
       .findOne({ title: body.title, locale: body.locale })
+      .lean()
       .exec();
 
     if (exists) {
@@ -227,7 +228,10 @@ export class ProjectService {
     await this.generalModel.findByIdAndDelete(general._id);
   }
 
-  async deleteTranslation(generalId: string, locale: LocaleType): Promise<void> {
+  async deleteTranslation(
+    generalId: string,
+    locale: LocaleType,
+  ): Promise<{ projectGeneralDeleted: boolean }> {
     const translation = await this.translationModel
       .findOne({ locale, general: generalId })
       .populate<ProjectDocument>('general')
@@ -250,6 +254,10 @@ export class ProjectService {
       }
 
       await this.generalModel.findByIdAndDelete(general._id);
+
+      return { projectGeneralDeleted: true };
     }
+
+    return { projectGeneralDeleted: false };
   }
 }

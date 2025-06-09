@@ -36,7 +36,7 @@ export class SkillCategoryService {
   ) {}
 
   async createCategoryGeneral(body: CreateSkillCategoryDto): Promise<SkillCategoryPlain> {
-    const existing = await this.categoryGeneralModel.findOne({ key: body.key }).exec();
+    const existing = await this.categoryGeneralModel.findOne({ key: body.key }).lean().exec();
 
     if (existing) {
       throw new ConflictException(`Skill category with key "${body.key}" already exists`);
@@ -52,7 +52,7 @@ export class SkillCategoryService {
     generalId: string,
     body: AddSkillTranslationDto,
   ): Promise<SkillCategoryTransPlain> {
-    const general = await this.categoryGeneralModel.findById(generalId).exec();
+    const general = await this.categoryGeneralModel.findById(generalId).lean().exec();
     if (!general) {
       throw new NotFoundException(`Category general with id "${generalId}" not found`);
     }
@@ -196,18 +196,45 @@ export class SkillCategoryService {
     await this.categoryGeneralModel.findByIdAndDelete(categoryId).exec();
   }
 
-  async deleteCategoryTranslation(categoryId: string, locale: string): Promise<void> {
-    const result = await this.categoryTransModel
-      .findOneAndDelete({
+  async deleteCategoryTranslation(
+    categoryId: string,
+    locale: string,
+  ): Promise<{ categoryGeneralDeleted: boolean }> {
+    const translation = await this.categoryTransModel
+      .findOne({
         general: categoryId,
         locale,
       })
+      .lean()
       .exec();
 
-    if (!result) {
+    if (!translation) {
       throw new NotFoundException(
         `Translation for category "${categoryId}" in locale "${locale}" not found`,
       );
     }
+
+    const translationsCount = await this.categoryTransModel.countDocuments({
+      general: categoryId,
+    });
+
+    const hasItems = await this.itemModel.exists({ category: categoryId });
+
+    if (translationsCount <= 1) {
+      if (hasItems) {
+        throw new BadRequestException(
+          `Cannot delete the last translation of a category with existing skill items`,
+        );
+      }
+
+      await this.categoryTransModel.deleteOne({ _id: translation._id }).exec();
+      await this.categoryGeneralModel.findByIdAndDelete(categoryId).exec();
+
+      return { categoryGeneralDeleted: true };
+    }
+
+    await this.categoryTransModel.deleteOne({ _id: translation._id }).exec();
+
+    return { categoryGeneralDeleted: false };
   }
 }
