@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, UploadedFile } from '@nestjs/common';
 import { AboutService } from './about.service';
 import { CreateAboutDto, UpdateAboutDto } from './dtos';
-import { ImageUploadInterceptor } from 'src/common/decorators';
+import { Auth, ImageUploadInterceptor, Roles } from 'src/common/decorators';
 import { LocaleType } from 'src/types';
 
 @Controller('portfolio/about')
@@ -13,12 +13,16 @@ export class AboutController {
     return this.service.getByLocale(locale);
   }
 
+  @Auth()
+  @Roles('Admin')
   @Post()
   @ImageUploadInterceptor({ deniedTypes: ['image/svg+xml'] })
   create(@Body() body: CreateAboutDto, @UploadedFile() file: Express.Multer.File) {
     return this.service.createByLocale(body, file);
   }
 
+  @Auth()
+  @Roles('Admin')
   @Patch(':locale')
   @ImageUploadInterceptor({ deniedTypes: ['image/svg+xml'] })
   update(

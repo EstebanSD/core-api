@@ -22,7 +22,7 @@ import {
   UpdateSkillTransDto,
 } from './dtos';
 import { LocaleType } from 'src/types';
-import { ImageUploadInterceptor } from 'src/common/decorators';
+import { Auth, ImageUploadInterceptor, Roles } from 'src/common/decorators';
 
 @Controller('portfolio/skills')
 export class SkillController {
@@ -41,21 +41,29 @@ export class SkillController {
     return this.skillCategoryService.findCategoryById(generalId, locale);
   }
 
+  @Auth()
+  @Roles('Admin')
   @Post('categories')
   createCategoryGeneral(@Body() body: CreateSkillCategoryDto) {
     return this.skillCategoryService.createCategoryGeneral(body);
   }
 
+  @Auth()
+  @Roles('Admin')
   @Post('categories/:generalId/locale')
   createCategory(@Param('generalId') generalId: string, @Body() body: AddSkillTranslationDto) {
     return this.skillCategoryService.addCategoryTranslation(generalId, body);
   }
 
+  @Auth()
+  @Roles('Admin')
   @Patch('categories/:generalId')
   updateCategoryOrder(@Param('generalId') generalId: string, @Body() body: UpdateSkillCategoryDto) {
     return this.skillCategoryService.updateCategoryOrder(generalId, body);
   }
 
+  @Auth()
+  @Roles('Admin')
   @Patch('categories/:generalId/locale/:locale')
   updateCategoryTranslation(
     @Param('generalId') generalId: string,
@@ -65,11 +73,15 @@ export class SkillController {
     return this.skillCategoryService.updateCategoryTranslation(generalId, locale, body);
   }
 
+  @Auth()
+  @Roles('Admin')
   @Delete('categories/:generalId')
   deleteCategory(@Param('generalId') generalId: string) {
     return this.skillCategoryService.deleteCategory(generalId);
   }
 
+  @Auth()
+  @Roles('Admin')
   @Delete('categories/:generalId/locale/:locale')
   deleteCategoryTranslation(
     @Param('generalId') generalId: string,
@@ -85,6 +97,8 @@ export class SkillController {
     return this.skillItemService.findItemsByCategory(generalId, query);
   }
 
+  @Auth()
+  @Roles('Admin')
   @Post('categories/:generalId/items')
   @ImageUploadInterceptor()
   createItem(
@@ -95,6 +109,8 @@ export class SkillController {
     return this.skillItemService.createItem(generalId, body, file);
   }
 
+  @Auth()
+  @Roles('Admin')
   @Patch('items/:itemId')
   @ImageUploadInterceptor()
   updateItem(
@@ -105,6 +121,8 @@ export class SkillController {
     return this.skillItemService.updateItem(itemId, body, file);
   }
 
+  @Auth()
+  @Roles('Admin')
   @Delete('items/:itemId')
   deleteItem(@Param('itemId') itemId: string) {
     return this.skillItemService.deleteItem(itemId);
