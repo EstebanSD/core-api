@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, UploadedFile } from '@nestjs/common';
 import { AboutService } from './about.service';
 import { CreateAboutDto, UpdateAboutDto } from './dtos';
-import { ImageUploadInterceptor } from 'src/common/interceptors';
+import { ImageUploadInterceptor } from 'src/common/decorators';
 import { LocaleType } from 'src/types';
 
 @Controller('portfolio/about')

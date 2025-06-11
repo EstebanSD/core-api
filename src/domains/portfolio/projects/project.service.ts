@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ConflictException, Inject } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { InjectPortfolioModel } from 'src/common/helpers';
 import {
   ProjectDocument,
   ProjectGeneral,
@@ -16,8 +16,9 @@ import { LocaleType } from 'src/types';
 @Injectable()
 export class ProjectService {
   constructor(
-    @InjectModel(ProjectGeneral.name) private readonly generalModel: Model<ProjectGeneralDocument>,
-    @InjectModel(ProjectTranslation.name)
+    @InjectPortfolioModel(ProjectGeneral.name)
+    private readonly generalModel: Model<ProjectGeneralDocument>,
+    @InjectPortfolioModel(ProjectTranslation.name)
     private readonly translationModel: Model<ProjectTranslationDocument>,
     @Inject('IStorageService') private readonly storageService: IStorageService,
   ) {}
@@ -25,6 +26,7 @@ export class ProjectService {
   async create(body: CreateProjectDto, files?: StorageUploadParams[]): Promise<ProjectPlain> {
     const exists = await this.translationModel
       .findOne({ title: body.title, locale: body.locale })
+      .lean()
       .exec();
 
     if (exists) {
@@ -227,7 +229,10 @@ export class ProjectService {
     await this.generalModel.findByIdAndDelete(general._id);
   }
 
-  async deleteTranslation(generalId: string, locale: LocaleType): Promise<void> {
+  async deleteTranslation(
+    generalId: string,
+    locale: LocaleType,
+  ): Promise<{ projectGeneralDeleted: boolean }> {
     const translation = await this.translationModel
       .findOne({ locale, general: generalId })
       .populate<ProjectDocument>('general')
@@ -250,6 +255,10 @@ export class ProjectService {
       }
 
       await this.generalModel.findByIdAndDelete(general._id);
+
+      return { projectGeneralDeleted: true };
     }
+
+    return { projectGeneralDeleted: false };
   }
 }

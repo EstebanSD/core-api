@@ -47,7 +47,7 @@ export class SkillItem {
   category: SkillCategoryGeneral;
 
   @Prop({ type: Image })
-  iconUrl?: Image;
+  icon?: Image;
 }
 export const SkillItemSchema = SchemaFactory.createForClass(SkillItem);
 

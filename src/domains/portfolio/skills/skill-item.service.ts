@@ -1,6 +1,6 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { InjectPortfolioModel } from 'src/common/helpers';
 import {
   SkillCategoryGeneral,
   SkillCategoryGeneralDocument,
@@ -15,24 +15,25 @@ import { CreateSkillItemDto, FilterItemDto, UpdateSkillItemDto } from './dtos';
 @Injectable()
 export class SkillItemService {
   constructor(
-    @InjectModel(SkillCategoryGeneral.name)
+    @InjectPortfolioModel(SkillCategoryGeneral.name)
     private readonly categoryGeneralModel: Model<SkillCategoryGeneralDocument>,
-    @InjectModel(SkillItem.name)
+    @InjectPortfolioModel(SkillItem.name)
     private readonly itemModel: Model<SkillItemDocument>,
     @Inject('IStorageService') private readonly storageService: IStorageService,
     private readonly sanitizerService: SanitizerService,
   ) {}
+
   async createItem(
     categoryId: string,
     body: CreateSkillItemDto,
     file?: Express.Multer.File,
   ): Promise<SkillItemPlain> {
-    const category = await this.categoryGeneralModel.findById(categoryId).exec();
+    const category = await this.categoryGeneralModel.findById(categoryId).lean().exec();
     if (!category) {
       throw new NotFoundException(`Category with id "${categoryId}" not found`);
     }
 
-    let iconUrl: { publicId: string; url: string } | null = null;
+    let icon: { publicId: string; url: string } | null = null;
     if (file) {
       let fileBuffer = file.buffer;
 
@@ -50,12 +51,12 @@ export class SkillItemService {
         folder: 'portfolio/skills',
       });
 
-      iconUrl = { publicId, url };
+      icon = { publicId, url };
     }
     const created = new this.itemModel({
       name: body.name,
       category: category._id,
-      iconUrl,
+      icon,
     });
 
     const item = await created.save();
@@ -63,8 +64,8 @@ export class SkillItemService {
   }
 
   async updateItem(
-    { name }: UpdateSkillItemDto,
     itemId: string,
+    { name }: UpdateSkillItemDto,
     file?: Express.Multer.File,
   ): Promise<SkillItemPlain> {
     const item = await this.itemModel.findById<SkillItemDocument>(itemId).exec();
@@ -86,8 +87,8 @@ export class SkillItemService {
         fileBuffer = Buffer.from(cleanSvg, 'utf-8');
       }
 
-      if (item.iconUrl?.publicId) {
-        await this.storageService.deleteFile(item.iconUrl.publicId);
+      if (item.icon?.publicId) {
+        await this.storageService.deleteFile(item.icon.publicId);
       }
 
       const { publicId, url } = await this.storageService.uploadFile({
@@ -97,7 +98,7 @@ export class SkillItemService {
         folder: 'portfolio/skills',
       });
 
-      item.iconUrl = { publicId, url };
+      item.icon = { publicId, url };
     }
 
     const updated = await item.save();
@@ -122,8 +123,8 @@ export class SkillItemService {
       throw new NotFoundException(`Skill item with id "${itemId}" not found`);
     }
 
-    if (item.iconUrl?.publicId) {
-      await this.storageService.deleteFile(item.iconUrl.publicId);
+    if (item.icon?.publicId) {
+      await this.storageService.deleteFile(item.icon.publicId);
     }
 
     await this.itemModel.deleteOne({ _id: itemId }).exec();

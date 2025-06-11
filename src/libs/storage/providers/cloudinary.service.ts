@@ -6,6 +6,7 @@ import { CustomLoggerService } from 'src/common/logger/custom-logger.service';
 import { IStorageService, StorageFileMetadata, StorageUploadParams } from '../interfaces';
 import { v4 as uuid } from 'uuid';
 import * as path from 'path';
+import { getExtensionFromMime } from '../helpers';
 
 type CloudinaryDestroyResponse = {
   result: 'ok' | 'not found' | 'error';
@@ -30,11 +31,13 @@ export class CloudinaryService implements IStorageService {
     try {
       const nameWithoutExt = path.parse(filename).name;
       const uniqueName = `${nameWithoutExt}-${uuid()}`;
+      const ext = getExtensionFromMime(mimetype);
+
       const uploadOptions: UploadApiOptions = {
         resource_type: resourceType,
         public_id: uniqueName,
         folder,
-        format: mimetype.split('/')[1],
+        format: ext,
       };
 
       const uploadStream = (): Promise<StorageFileMetadata> => {

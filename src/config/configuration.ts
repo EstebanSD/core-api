@@ -3,8 +3,12 @@ export default () => ({
   baseUrl: process.env.BASE_URL,
   nodeEnv: process.env.NODE_ENV ?? 'development',
 
+  jwtSecret: process.env.JWT_SECRET,
+  jwtExpiration: process.env.JWT_EXPIRATION,
+
   mongoUri: process.env.MONGO_URI,
   mongoDatabases: {
+    auth: process.env.MONGO_DB_AUTH,
     portfolio: process.env.MONGO_DB_PORTFOLIO,
   },
 
