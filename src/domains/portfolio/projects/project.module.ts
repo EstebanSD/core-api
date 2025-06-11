@@ -9,13 +9,17 @@ import {
   ProjectTranslationSchema,
 } from '../schemas/project.schema';
 import { StorageModule } from 'src/libs/storage';
+import { DB_CONNECTIONS } from 'src/common/constants';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: ProjectGeneral.name, schema: ProjectGeneralSchema },
-      { name: ProjectTranslation.name, schema: ProjectTranslationSchema },
-    ]),
+    MongooseModule.forFeature(
+      [
+        { name: ProjectGeneral.name, schema: ProjectGeneralSchema },
+        { name: ProjectTranslation.name, schema: ProjectTranslationSchema },
+      ],
+      DB_CONNECTIONS.PORTFOLIO,
+    ),
     StorageModule.registerAsync(),
   ],
   controllers: [ProjectController],

@@ -1,13 +1,15 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { MongooseModule } from '@nestjs/mongoose';
+import { ConfigService } from '@nestjs/config';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
+import { CustomLoggerModule } from './common/logger/custom-logger.module';
+import { AppConfig, AppConfigModule } from './config';
+import { DB_CONNECTIONS } from './common/constants';
+import { AuthModule } from './auth/auth.module';
 import { ProjectModule } from './domains/portfolio/projects/project.module';
 import { AboutModule } from './domains/portfolio/about/about.module';
-import { CustomLoggerModule } from './common/logger/custom-logger.module';
-import { ServeStaticModule } from '@nestjs/serve-static';
-import { AppConfig, AppConfigModule } from './config';
-import { ConfigService } from '@nestjs/config';
-import { join } from 'path';
 import { SkillModule } from './domains/portfolio/skills/skill.module';
 
 @Module({
@@ -22,10 +24,20 @@ import { SkillModule } from './domains/portfolio/skills/skill.module';
       inject: [ConfigService], // MongooseModule needs ConfigService to access configuration
       useFactory: (configService: ConfigService<AppConfig, true>) => ({
         uri: configService.getOrThrow('mongoUri'),
+        dbName: configService.getOrThrow<{ auth: string }>('mongoDatabases').auth,
+      }),
+      connectionName: DB_CONNECTIONS.AUTH,
+    }),
+    MongooseModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService<AppConfig, true>) => ({
+        uri: configService.getOrThrow('mongoUri'),
         dbName: configService.getOrThrow<{ portfolio: string }>('mongoDatabases').portfolio,
       }),
+      connectionName: DB_CONNECTIONS.PORTFOLIO,
     }),
 
+    AuthModule,
     AboutModule,
     ProjectModule,
     SkillModule,

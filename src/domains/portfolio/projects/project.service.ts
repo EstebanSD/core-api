@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ConflictException, Inject } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { InjectPortfolioModel } from 'src/common/helpers';
 import {
   ProjectDocument,
   ProjectGeneral,
@@ -16,8 +16,9 @@ import { LocaleType } from 'src/types';
 @Injectable()
 export class ProjectService {
   constructor(
-    @InjectModel(ProjectGeneral.name) private readonly generalModel: Model<ProjectGeneralDocument>,
-    @InjectModel(ProjectTranslation.name)
+    @InjectPortfolioModel(ProjectGeneral.name)
+    private readonly generalModel: Model<ProjectGeneralDocument>,
+    @InjectPortfolioModel(ProjectTranslation.name)
     private readonly translationModel: Model<ProjectTranslationDocument>,
     @Inject('IStorageService') private readonly storageService: IStorageService,
   ) {}

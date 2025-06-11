@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { ProjectService } from './project.service';
 import { CreateProjectDto, UpdateProjectDto, FindProjectsDto, AddTranslationDto } from './dtos';
-import { MultiImageUploadInterceptor } from 'src/common/interceptors';
+import { MultiImageUploadInterceptor } from 'src/common/decorators';
 import { LocaleType } from 'src/types';
 
 @Controller('portfolio/projects')
