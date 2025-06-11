@@ -5,7 +5,11 @@ export const validationSchema = Joi.object({
   BASE_URL: Joi.string().uri().required(),
   NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
 
+  JWT_SECRET: Joi.string().required(),
+  JWT_EXPIRATION: Joi.string().required(),
+
   MONGO_URI: Joi.string().required(),
+  MONGO_DB_AUTH: Joi.string().required(),
   MONGO_DB_PORTFOLIO: Joi.string().required(),
 
   STORAGE_PROVIDER: Joi.string().valid('local', 'cloudinary', 's3').required(),

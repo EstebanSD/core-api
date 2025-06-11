@@ -22,7 +22,7 @@ import {
   UpdateSkillTransDto,
 } from './dtos';
 import { LocaleType } from 'src/types';
-import { ImageUploadInterceptor } from 'src/common/interceptors';
+import { ImageUploadInterceptor } from 'src/common/decorators';
 
 @Controller('portfolio/skills')
 export class SkillController {

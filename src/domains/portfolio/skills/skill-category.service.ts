@@ -4,8 +4,8 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { InjectPortfolioModel } from 'src/common/helpers';
 import {
   SkillCategoryGeneral,
   SkillCategoryGeneralDocument,
@@ -27,11 +27,11 @@ import {
 @Injectable()
 export class SkillCategoryService {
   constructor(
-    @InjectModel(SkillCategoryGeneral.name)
+    @InjectPortfolioModel(SkillCategoryGeneral.name)
     private readonly categoryGeneralModel: Model<SkillCategoryGeneralDocument>,
-    @InjectModel(SkillCategoryTrans.name)
+    @InjectPortfolioModel(SkillCategoryTrans.name)
     private readonly categoryTransModel: Model<SkillCategoryTransDocument>,
-    @InjectModel(SkillItem.name)
+    @InjectPortfolioModel(SkillItem.name)
     private readonly itemModel: Model<SkillItemDocument>,
   ) {}
 

@@ -22,8 +22,21 @@ export class AppConfigService {
     return `${this.baseUrl}/api`;
   }
 
+  get jwtSecret(): string {
+    return this.config.getOrThrow('jwtSecret');
+  }
+
+  get jwtExpiration(): string {
+    return this.config.getOrThrow('jwtExpiration');
+  }
+
   get mongoUri(): string {
     return this.config.getOrThrow('mongoUri');
+  }
+
+  get authDb(): AppConfig['mongoDatabases']['auth'] {
+    const { auth } = this.config.getOrThrow<AppConfig['mongoDatabases']>('mongoDatabases');
+    return auth;
   }
 
   get portfolioDb(): AppConfig['mongoDatabases']['portfolio'] {
