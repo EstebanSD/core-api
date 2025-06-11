@@ -7,7 +7,7 @@ import {
   SkillCategoryTransSchema,
   SkillItem,
   SkillItemSchema,
-} from '../schemas/skill.schema';
+} from './schemas';
 import { StorageModule } from 'src/libs/storage';
 import { SkillController } from './skill.controller';
 import { SkillCategoryService } from './skill-category.service';

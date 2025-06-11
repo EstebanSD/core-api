@@ -15,7 +15,7 @@ import {
   SkillCategoryTransPlain,
   SkillItem,
   SkillItemDocument,
-} from '../schemas/skill.schema';
+} from './schemas';
 import {
   AddSkillTranslationDto,
   CreateSkillCategoryDto,
@@ -74,7 +74,7 @@ export class SkillCategoryService {
     });
 
     const translation = await created.save();
-    return translation.toObject();
+    return { ...translation.toObject(), general };
   }
 
   async updateCategoryOrder(
@@ -103,6 +103,7 @@ export class SkillCategoryService {
         general: categoryId,
         locale,
       })
+      .populate<{ general: SkillCategoryGeneralDocument }>('general')
       .exec();
 
     if (!translation) {

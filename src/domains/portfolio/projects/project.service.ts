@@ -8,7 +8,7 @@ import {
   ProjectPlain,
   ProjectTranslation,
   ProjectTranslationDocument,
-} from '../schemas/project.schema';
+} from './schemas';
 import { CreateProjectDto, UpdateProjectDto, FindProjectsDto, AddTranslationDto } from './dtos';
 import { IStorageService, StorageUploadParams, uploadMultiple } from 'src/libs/storage';
 import { LocaleType } from 'src/types';

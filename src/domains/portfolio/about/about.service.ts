@@ -1,16 +1,17 @@
 import { ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { Model } from 'mongoose';
-import { InjectPortfolioModel } from 'src/common/helpers';
+import { InjectPortfolioModel, pickDefined } from 'src/common/helpers';
 import {
   AboutPlain,
   AboutGeneral,
   AboutGeneralDocument,
   AboutTranslation,
   AboutTranslationDocument,
-} from '../schemas/about.schema';
+} from './schemas';
 import { CreateAboutDto, UpdateAboutDto } from './dtos';
 import { IStorageService } from 'src/libs/storage';
 import { LocaleType } from 'src/types';
+import { FileMetadata } from 'src/types/interfaces';
 
 @Injectable()
 export class AboutService {
@@ -26,16 +27,20 @@ export class AboutService {
     const translation = await this.translationModel.findOne({ locale }).lean().exec();
     if (!translation) throw new NotFoundException(`No about found for locale "${locale}"`);
 
-    const generalInfo = await this.generalModel.findById(translation.generalInfo).lean().exec();
-    if (!generalInfo) throw new NotFoundException('General about info not found');
+    const general = await this.generalModel.findById(translation.general).lean().exec();
+    if (!general) throw new NotFoundException('General about info not found');
 
     return {
       ...translation,
-      generalInfo: generalInfo,
+      general,
     };
   }
 
-  async createByLocale(body: CreateAboutDto, file?: Express.Multer.File): Promise<AboutPlain> {
+  async createByLocale(
+    body: CreateAboutDto,
+    image?: Express.Multer.File,
+    cv?: Express.Multer.File,
+  ): Promise<AboutPlain> {
     const exists = await this.translationModel.findOne({ locale: body.locale }).lean().exec();
     if (exists) {
       throw new ConflictException(`About info already exists for locale "${body.locale}"`);
@@ -43,47 +48,43 @@ export class AboutService {
 
     let general: AboutGeneralDocument | null = await this.generalModel.findOne().exec();
     if (!general) {
-      let imageData: { publicId: string; url: string } | null = null;
-
-      if (file) {
-        const { publicId, url } = await this.storageService.uploadFile({
-          fileBuffer: file.buffer,
-          filename: file.originalname,
-          mimetype: file.mimetype,
-          folder: 'portfolio/about',
-        });
-
-        imageData = { publicId, url };
-      }
+      const imageData = image ? await this.uploadFile(image, 'portfolio/about') : null;
 
       general = new this.generalModel({
+        fullName: body.fullName,
+        birthYear: body.birthYear,
+        location: body.location,
         image: imageData,
-        socialLinks: body.socialLinks,
+        positioningTags: body.positioningTags,
       });
 
       await general.save();
     }
 
+    const cvData = cv ? await this.uploadFile(cv, 'portfolio/about') : null;
+
     const translation = new this.translationModel({
       locale: body.locale,
-      fullName: body.fullName,
-      role: body.role,
+      title: body.title,
       bio: body.bio,
-      generalInfo: general._id,
+      tagline: body.tagline,
+      cv: cvData,
+      general: general._id,
     });
 
     await translation.save();
 
     return {
       ...translation.toObject(),
-      generalInfo: general.toObject(),
+      general: general.toObject(),
     };
   }
 
   async updateByLocale(
     locale: LocaleType,
     body: UpdateAboutDto,
-    file?: Express.Multer.File,
+    image?: Express.Multer.File,
+    cv?: Express.Multer.File,
   ): Promise<AboutPlain> {
     const translation = await this.translationModel.findOne({ locale }).exec();
     if (!translation) {
@@ -91,43 +92,52 @@ export class AboutService {
     }
 
     const general: AboutGeneralDocument | null = await this.generalModel
-      .findById(translation.generalInfo)
+      .findById(translation.general)
       .exec();
     if (!general) {
       throw new NotFoundException('General about info not found');
     }
-    const { fullName, role, bio } = body;
 
-    Object.assign(translation, {
-      ...(fullName && { fullName }),
-      ...(role && { role }),
-      ...(bio && { bio }),
-    });
+    // Update translation fields
+    Object.assign(translation, pickDefined(body, ['title', 'bio', 'tagline']));
+    if (cv) {
+      if (translation.cv?.publicId) {
+        await this.storageService.deleteFile(translation.cv.publicId);
+      }
 
-    if (file) {
+      translation.cv = await this.uploadFile(cv, 'portfolio/about');
+    }
+
+    // Update general fields
+    Object.assign(
+      general,
+      pickDefined(body, ['fullName', 'birthYear', 'location', 'positioningTags']),
+    );
+
+    if (image) {
       if (general.image?.publicId) {
         await this.storageService.deleteFile(general.image.publicId);
       }
 
-      const { publicId, url } = await this.storageService.uploadFile({
-        fileBuffer: file.buffer,
-        filename: file.originalname,
-        mimetype: file.mimetype,
-        folder: 'portfolio/about',
-      });
-
-      general.image = { publicId, url };
-    }
-
-    if (body.socialLinks !== undefined) {
-      general.socialLinks = body.socialLinks;
+      general.image = await this.uploadFile(image, 'portfolio/about');
     }
 
     await Promise.all([translation.save(), general.save()]);
 
     return {
       ...translation.toObject(),
-      generalInfo: general.toObject(),
+      general: general.toObject(),
     };
+  }
+
+  private async uploadFile(file: Express.Multer.File, folder: string): Promise<FileMetadata> {
+    const { publicId, url } = await this.storageService.uploadFile({
+      fileBuffer: file.buffer,
+      filename: file.originalname,
+      mimetype: file.mimetype,
+      folder,
+    });
+
+    return { publicId, url };
   }
 }

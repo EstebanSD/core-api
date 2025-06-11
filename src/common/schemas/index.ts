@@ -1,1 +1,1 @@
-export * from './image.schema';
+export * from './file-metadata.schema';

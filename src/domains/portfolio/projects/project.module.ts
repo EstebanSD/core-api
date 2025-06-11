@@ -7,7 +7,7 @@ import {
   ProjectGeneralSchema,
   ProjectTranslation,
   ProjectTranslationSchema,
-} from '../schemas/project.schema';
+} from './schemas';
 import { StorageModule } from 'src/libs/storage';
 import { DB_CONNECTIONS } from 'src/common/constants';
 

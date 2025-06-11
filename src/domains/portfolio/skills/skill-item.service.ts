@@ -7,7 +7,7 @@ import {
   SkillItem,
   SkillItemDocument,
   SkillItemPlain,
-} from '../schemas/skill.schema';
+} from './schemas';
 import { IStorageService } from 'src/libs/storage';
 import { SanitizerService } from 'src/libs/sanitizer';
 import { CreateSkillItemDto, FilterItemDto, UpdateSkillItemDto } from './dtos';
@@ -60,7 +60,7 @@ export class SkillItemService {
     });
 
     const item = await created.save();
-    return item.toObject();
+    return { ...item.toObject(), category };
   }
 
   async updateItem(
@@ -68,7 +68,10 @@ export class SkillItemService {
     { name }: UpdateSkillItemDto,
     file?: Express.Multer.File,
   ): Promise<SkillItemPlain> {
-    const item = await this.itemModel.findById<SkillItemDocument>(itemId).exec();
+    const item = await this.itemModel
+      .findById<SkillItemDocument>(itemId)
+      .populate<{ category: SkillCategoryGeneralDocument }>('category')
+      .exec();
     if (!item) {
       throw new NotFoundException(`Skill item with id "${itemId}" not found`);
     }
@@ -112,7 +115,11 @@ export class SkillItemService {
       query.name = { $regex: filter.name, $options: 'i' };
     }
 
-    const items = await this.itemModel.find(query).sort({ name: 1 }).exec();
+    const items = await this.itemModel
+      .find(query)
+      .sort({ name: 1 })
+      .populate<{ category: SkillCategoryGeneralDocument }>('category')
+      .exec();
 
     return items.map((item) => item.toObject());
   }
