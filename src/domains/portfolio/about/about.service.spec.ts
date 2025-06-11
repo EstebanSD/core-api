@@ -27,13 +27,13 @@ describe('AboutService', () => {
       providers: [
         AboutService,
         {
-          provide: getModelToken(AboutTranslation.name),
+          provide: getModelToken(AboutTranslation.name, 'portfolio'),
           useValue: Object.assign(mockTranslationConstructor, {
             findOne: jest.fn(),
           }),
         },
         {
-          provide: getModelToken(AboutGeneral.name),
+          provide: getModelToken(AboutGeneral.name, 'portfolio'),
           useValue: Object.assign(mockGeneralConstructor, {
             findOne: jest.fn(),
             findById: jest.fn(),
@@ -47,8 +47,8 @@ describe('AboutService', () => {
     }).compile();
 
     service = module.get<AboutService>(AboutService);
-    mockTranslationModel = module.get(getModelToken(AboutTranslation.name));
-    mockGeneralModel = module.get(getModelToken(AboutGeneral.name));
+    mockTranslationModel = module.get(getModelToken(AboutTranslation.name, 'portfolio'));
+    mockGeneralModel = module.get(getModelToken(AboutGeneral.name, 'portfolio'));
   });
 
   it('should be defined', () => {
