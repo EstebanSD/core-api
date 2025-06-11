@@ -32,9 +32,9 @@ describe('AboutController (e2e)', () => {
       .useValue({})
 
       // Mock the models used in AboutService
-      .overrideProvider(getModelToken(AboutGeneral.name))
+      .overrideProvider(getModelToken(AboutGeneral.name, 'portfolio'))
       .useValue({})
-      .overrideProvider(getModelToken(AboutTranslation.name))
+      .overrideProvider(getModelToken(AboutTranslation.name, 'portfolio'))
       .useValue({})
 
       // Mock the storage service
