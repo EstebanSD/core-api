@@ -7,7 +7,7 @@ import {
   AboutGeneralSchema,
   AboutTranslation,
   AboutTranslationSchema,
-} from '../schemas/about.schema';
+} from './schemas';
 import { StorageModule } from 'src/libs/storage';
 import { DB_CONNECTIONS } from 'src/common/constants';
 
