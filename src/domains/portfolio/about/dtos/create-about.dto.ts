@@ -3,21 +3,6 @@ import { IsArray, IsIn, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class
 import { parseJsonArray } from 'src/common/helpers';
 import { LOCALE_ENUM, LocaleType } from 'src/types';
 
-// FOR CONTACT
-// export class SocialLinksDto {
-//   @IsOptional()
-//   @IsUrl()
-//   github?: string;
-
-//   @IsOptional()
-//   @IsUrl()
-//   linkedin?: string;
-// }
-//  @IsOptional()
-//   @ValidateNested()
-//   @Type(() => SocialLinksDto)
-//   socialLinks?: SocialLinksDto;
-
 export class CreateAboutDto {
   @IsString()
   @IsNotEmpty()

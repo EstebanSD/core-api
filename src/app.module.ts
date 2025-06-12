@@ -11,6 +11,7 @@ import { AuthModule } from './auth/auth.module';
 import { ProjectModule } from './domains/portfolio/projects/project.module';
 import { AboutModule } from './domains/portfolio/about/about.module';
 import { SkillModule } from './domains/portfolio/skills/skill.module';
+import { ContactModule } from './domains/portfolio/contact/contact.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { SkillModule } from './domains/portfolio/skills/skill.module';
     AboutModule,
     ProjectModule,
     SkillModule,
+    ContactModule,
   ],
   controllers: [AppController],
 })
