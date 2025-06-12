@@ -4,7 +4,7 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { InjectPortfolioModel } from 'src/common/helpers';
 import {
   SkillCategoryGeneral,
@@ -59,7 +59,7 @@ export class SkillCategoryService {
 
     const existing = await this.categoryTransModel
       .findOne({
-        general: generalId,
+        general: general._id,
         locale: body.locale,
       })
       .exec();
@@ -98,9 +98,10 @@ export class SkillCategoryService {
     locale: string,
     { name }: UpdateSkillTransDto,
   ): Promise<SkillCategoryTransPlain> {
+    const generalObjectId = new Types.ObjectId(categoryId);
     const translation = await this.categoryTransModel
       .findOne({
-        general: categoryId,
+        general: generalObjectId,
         locale,
       })
       .populate<{ general: SkillCategoryGeneralDocument }>('general')
@@ -165,7 +166,7 @@ export class SkillCategoryService {
 
     const translation = await this.categoryTransModel
       .findOne({
-        general: categoryId,
+        general: category._id,
         locale,
       })
       .exec();
@@ -201,9 +202,10 @@ export class SkillCategoryService {
     categoryId: string,
     locale: string,
   ): Promise<{ categoryGeneralDeleted: boolean }> {
+    const generalObjectId = new Types.ObjectId(categoryId);
     const translation = await this.categoryTransModel
       .findOne({
-        general: categoryId,
+        general: generalObjectId,
         locale,
       })
       .lean()

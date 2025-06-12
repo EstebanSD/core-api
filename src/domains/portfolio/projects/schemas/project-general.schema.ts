@@ -1,7 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
 import { PROJECT_STATUSES, PROJECT_TYPES, ProjectStatus, ProjectType } from 'src/types/portfolio';
-import { TECH_STACK, TechStack } from 'src/types';
 import { FileMetadataSchema } from 'src/common/schemas';
 import { FileMetadata } from 'src/types/interfaces';
 
@@ -21,8 +20,8 @@ export class ProjectGeneral {
   @Prop()
   endDate?: Date;
 
-  @Prop({ type: [String], enum: TECH_STACK })
-  technologies?: TechStack[];
+  @Prop({ type: [String] })
+  technologies?: string[];
 
   @Prop({
     type: {
