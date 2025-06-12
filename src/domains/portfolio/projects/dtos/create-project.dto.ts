@@ -8,9 +8,10 @@ import {
   ValidateNested,
   IsIn,
 } from 'class-validator';
-import { Type } from 'class-transformer';
-import { LOCALE_ENUM, LocaleType, TECH_STACK, TechStack } from 'src/types';
+import { Transform, Type } from 'class-transformer';
+import { LOCALE_ENUM, LocaleType } from 'src/types';
 import { PROJECT_STATUSES, PROJECT_TYPES, ProjectStatus, ProjectType } from 'src/types/portfolio';
+import { parseJsonArray } from 'src/common/helpers';
 
 class ProjectLinksDto {
   @IsOptional()
@@ -55,8 +56,9 @@ export class CreateProjectDto {
 
   @IsOptional()
   @IsArray()
-  @IsIn(TECH_STACK, { each: true })
-  technologies?: TechStack[];
+  @IsString({ each: true })
+  @Transform(({ value }) => parseJsonArray(value))
+  technologies?: string[];
 
   @IsOptional()
   @ValidateNested()

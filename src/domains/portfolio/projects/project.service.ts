@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, ConflictException, Inject } from '@nestjs/common';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { InjectPortfolioModel } from 'src/common/helpers';
 import {
   ProjectDocument,
@@ -126,8 +126,9 @@ export class ProjectService {
   }
 
   async findOne(generalId: string, locale: LocaleType): Promise<ProjectPlain> {
+    const generalObjectId = new Types.ObjectId(generalId);
     const translation = await this.translationModel
-      .findOne({ general: generalId, locale })
+      .findOne({ general: generalObjectId, locale })
       .populate<ProjectDocument>('general')
       .exec();
 
@@ -233,8 +234,9 @@ export class ProjectService {
     generalId: string,
     locale: LocaleType,
   ): Promise<{ projectGeneralDeleted: boolean }> {
+    const generalObjectId = new Types.ObjectId(generalId);
     const translation = await this.translationModel
-      .findOne({ locale, general: generalId })
+      .findOne({ locale, general: generalObjectId })
       .populate<ProjectDocument>('general')
       .exec();
 
