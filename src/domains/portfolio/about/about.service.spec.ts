@@ -4,9 +4,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
 import { AboutService } from './about.service';
-import { AboutGeneral, AboutTranslation } from '../schemas/about.schema';
+import { AboutGeneral, AboutTranslation } from './schemas';
 import { ConflictException, NotFoundException } from '@nestjs/common';
-import { CreateAboutDto } from './dtos';
+import { CreateAboutDto, UpdateAboutDto } from './dtos';
 
 describe('AboutService', () => {
   let service: AboutService;
@@ -59,21 +59,25 @@ describe('AboutService', () => {
     const mockLocale = 'en';
     const mockTranslation = {
       locale: 'en',
-      fullName: 'John Doe',
-      role: 'Full Stack Developer',
+      title: 'Software Developer',
       bio: 'Passionate about clean code and good architecture.',
-      generalInfo: 'mock-general-id',
+      tagline: 'Building the future, one line at a time',
+      cv: {
+        publicId: 'cv-public-id',
+        url: 'https://storage.com/cv.pdf',
+      },
+      general: 'mock-general-id',
     };
 
     const mockGeneral = {
+      fullName: 'John Doe',
+      birthYear: 1990,
+      location: 'New York, USA',
       image: {
         publicId: 'some-public-id',
         url: 'https://some-storage.com/photo.jpg',
       },
-      socialLinks: {
-        github: 'https://github.com/johndoe',
-        linkedin: 'https://linkedin.com/in/johndoe',
-      },
+      positioningTags: ['Full Stack', 'JavaScript', 'React'],
     };
 
     it('should return merged about info if both documents are found', async () => {
@@ -93,10 +97,11 @@ describe('AboutService', () => {
 
       expect(result).toEqual({
         locale: mockTranslation.locale,
-        fullName: mockTranslation.fullName,
-        role: mockTranslation.role,
+        title: mockTranslation.title,
         bio: mockTranslation.bio,
-        generalInfo: mockGeneral,
+        tagline: mockTranslation.tagline,
+        cv: mockTranslation.cv,
+        general: mockGeneral,
       });
     });
 
@@ -134,21 +139,34 @@ describe('AboutService', () => {
   describe('createByLocale', () => {
     const mockDto: CreateAboutDto = {
       locale: 'en',
-      fullName: 'John Doe',
-      role: 'Developer',
+      title: 'Software Developer',
       bio: 'Bio here',
-      socialLinks: {
-        github: 'https://github.com/johndoe',
-        linkedin: 'https://linkedin.com/in/johndoe',
-      },
+      tagline: 'Building amazing things',
+      fullName: 'John Doe',
+      birthYear: 1990,
+      location: 'New York, USA',
+      positioningTags: ['Full Stack', 'JavaScript'],
     };
 
-    const mockFile: Express.Multer.File = {
-      buffer: Buffer.from('dummy'),
+    const mockImageFile: Express.Multer.File = {
+      buffer: Buffer.from('dummy-image'),
       originalname: 'photo.jpg',
       mimetype: 'image/jpeg',
       fieldname: 'image',
       size: 1234,
+      encoding: '7bit',
+      destination: '',
+      filename: '',
+      path: '',
+      stream: null as any,
+    };
+
+    const mockCvFile: Express.Multer.File = {
+      buffer: Buffer.from('dummy-cv'),
+      originalname: 'cv.pdf',
+      mimetype: 'application/pdf',
+      fieldname: 'cv',
+      size: 5678,
       encoding: '7bit',
       destination: '',
       filename: '',
@@ -163,7 +181,7 @@ describe('AboutService', () => {
         }),
       });
 
-      await expect(service.createByLocale(mockDto, mockFile)).rejects.toThrow(
+      await expect(service.createByLocale(mockDto, mockImageFile, mockCvFile)).rejects.toThrow(
         new ConflictException(`About info already exists for locale "${mockDto.locale}"`),
       );
     });
@@ -174,69 +192,99 @@ describe('AboutService', () => {
           exec: jest.fn().mockResolvedValue(null),
         }),
       });
-      mockGeneralModel.findOne.mockReturnValueOnce({
-        exec: jest.fn().mockResolvedValue({
-          _id: 'some-general-id',
-          toObject: () => ({
-            image: {
-              publicId: 'some-id',
-              url: 'https://some.com/image.jpg',
-            },
-            socialLinks: mockDto.socialLinks,
-          }),
+
+      const existingGeneral = {
+        _id: 'existing-general-id',
+        toObject: () => ({
+          fullName: 'Existing Name',
+          birthYear: 1985,
+          location: 'Existing Location',
+          image: {
+            publicId: 'existing-id',
+            url: 'https://existing.com/image.jpg',
+          },
+          positioningTags: ['Existing', 'Tags'],
         }),
+      };
+
+      mockGeneralModel.findOne.mockReturnValueOnce({
+        exec: jest.fn().mockResolvedValue(existingGeneral),
+      });
+
+      mockStorageService.uploadFile.mockResolvedValueOnce({
+        publicId: 'cv-123',
+        url: 'http://storage.com/cv.pdf',
       });
 
       const mockTranslationDoc = {
         toObject: () => ({
           locale: mockDto.locale,
-          fullName: mockDto.fullName,
-          role: mockDto.role,
+          title: mockDto.title,
           bio: mockDto.bio,
-          generalInfo: 'some-general-id',
+          tagline: mockDto.tagline,
+          cv: {
+            publicId: 'cv-123',
+            url: 'http://storage.com/cv.pdf',
+          },
+          general: 'existing-general-id',
         }),
         save: jest.fn(),
       };
       mockTranslationConstructor.mockImplementation(() => mockTranslationDoc);
 
-      const result = await service.createByLocale(mockDto, mockFile);
+      const result = await service.createByLocale(mockDto, undefined, mockCvFile);
 
       expect(mockTranslationDoc.save).toHaveBeenCalled();
+      expect(mockStorageService.uploadFile).toHaveBeenCalledWith({
+        fileBuffer: mockCvFile.buffer,
+        filename: mockCvFile.originalname,
+        mimetype: mockCvFile.mimetype,
+        folder: 'portfolio/about',
+      });
       expect(result).toEqual({
         locale: mockDto.locale,
-        fullName: mockDto.fullName,
-        role: mockDto.role,
+        title: mockDto.title,
         bio: mockDto.bio,
-        generalInfo: {
-          image: {
-            publicId: 'some-id',
-            url: 'https://some.com/image.jpg',
-          },
-          socialLinks: mockDto.socialLinks,
+        tagline: mockDto.tagline,
+        cv: {
+          publicId: 'cv-123',
+          url: 'http://storage.com/cv.pdf',
         },
+        general: existingGeneral.toObject(),
       });
     });
 
-    it('should upload image and create general + translation if general does not exist', async () => {
+    it('should create general + translation if general does not exist', async () => {
       mockTranslationModel.findOne.mockReturnValueOnce({
         lean: () => ({
           exec: jest.fn().mockResolvedValue(null),
         }),
       });
-      mockGeneralModel.findOne.mockReturnValueOnce({ exec: jest.fn().mockResolvedValue(null) });
-
-      mockStorageService.uploadFile.mockResolvedValueOnce({
-        publicId: '123',
-        url: 'http://image.com/photo.jpg',
+      mockGeneralModel.findOne.mockReturnValueOnce({
+        exec: jest.fn().mockResolvedValue(null),
       });
 
+      mockStorageService.uploadFile
+        .mockResolvedValueOnce({
+          publicId: 'image-123',
+          url: 'http://storage.com/photo.jpg',
+        })
+        .mockResolvedValueOnce({
+          publicId: 'cv-123',
+          url: 'http://storage.com/cv.pdf',
+        });
+
       const generalDocMock = {
+        _id: 'new-general-id',
         toObject: () => ({
+          fullName: mockDto.fullName,
+          birthYear: mockDto.birthYear,
+          location: mockDto.location,
           image: {
-            publicId: '123',
-            url: 'http://image.com/photo.jpg',
+            publicId: 'image-123',
+            url: 'http://storage.com/photo.jpg',
           },
-          socialLinks: mockDto.socialLinks,
+          positioningTags: mockDto.positioningTags,
         }),
         save: jest.fn().mockResolvedValue({ _id: 'new-general-id' }),
       };
@@ -245,41 +293,100 @@ describe('AboutService', () => {
       const translationDocMock = {
         toObject: () => ({
           locale: mockDto.locale,
-          fullName: mockDto.fullName,
-          role: mockDto.role,
+          title: mockDto.title,
           bio: mockDto.bio,
-          generalInfo: 'new-general-id',
+          tagline: mockDto.tagline,
+          cv: {
+            publicId: 'cv-123',
+            url: 'http://storage.com/cv.pdf',
+          },
+          general: 'new-general-id',
         }),
         save: jest.fn(),
       };
       mockTranslationConstructor.mockImplementation(() => translationDocMock);
 
-      await service.createByLocale(mockDto, mockFile);
+      await service.createByLocale(mockDto, mockImageFile, mockCvFile);
 
-      expect(mockStorageService.uploadFile).toHaveBeenCalled();
+      expect(mockStorageService.uploadFile).toHaveBeenCalledTimes(2);
+      expect(generalDocMock.save).toHaveBeenCalled();
+      expect(translationDocMock.save).toHaveBeenCalled();
+    });
+
+    it('should create without files if none provided', async () => {
+      mockTranslationModel.findOne.mockReturnValueOnce({
+        lean: () => ({
+          exec: jest.fn().mockResolvedValue(null),
+        }),
+      });
+      mockGeneralModel.findOne.mockReturnValueOnce({
+        exec: jest.fn().mockResolvedValue(null),
+      });
+
+      const generalDocMock = {
+        _id: 'new-general-id',
+        toObject: () => ({
+          fullName: mockDto.fullName,
+          birthYear: mockDto.birthYear,
+          location: mockDto.location,
+          image: null,
+          positioningTags: mockDto.positioningTags,
+        }),
+        save: jest.fn().mockResolvedValue({ _id: 'new-general-id' }),
+      };
+      mockGeneralConstructor.mockImplementation(() => generalDocMock);
+
+      const translationDocMock = {
+        toObject: () => ({
+          locale: mockDto.locale,
+          title: mockDto.title,
+          bio: mockDto.bio,
+          tagline: mockDto.tagline,
+          cv: null,
+          general: 'new-general-id',
+        }),
+        save: jest.fn(),
+      };
+      mockTranslationConstructor.mockImplementation(() => translationDocMock);
+
+      await service.createByLocale(mockDto);
+
+      expect(mockStorageService.uploadFile).not.toHaveBeenCalled();
       expect(generalDocMock.save).toHaveBeenCalled();
       expect(translationDocMock.save).toHaveBeenCalled();
     });
   });
 
   describe('updateByLocale', () => {
-    const mockDto: CreateAboutDto = {
-      locale: 'en',
-      fullName: 'Updated Name',
-      role: 'Updated Role',
+    const mockDto: UpdateAboutDto = {
+      title: 'Updated Title',
       bio: 'Updated Bio',
-      socialLinks: {
-        github: 'https://github.com/updated',
-        linkedin: 'https://linkedin.com/in/updated',
-      },
+      tagline: 'Updated Tagline',
+      fullName: 'Updated Name',
+      birthYear: 1992,
+      location: 'Updated Location',
+      positioningTags: ['Updated', 'Tags'],
     };
 
-    const mockFile: Express.Multer.File = {
-      buffer: Buffer.from('dummy'),
-      originalname: 'photo.jpg',
+    const mockImageFile: Express.Multer.File = {
+      buffer: Buffer.from('dummy-image'),
+      originalname: 'new-photo.jpg',
       mimetype: 'image/jpeg',
       fieldname: 'image',
       size: 1234,
+      encoding: '7bit',
+      destination: '',
+      filename: '',
+      path: '',
+      stream: null as any,
+    };
+
+    const mockCvFile: Express.Multer.File = {
+      buffer: Buffer.from('dummy-cv'),
+      originalname: 'new-cv.pdf',
+      mimetype: 'application/pdf',
+      fieldname: 'cv',
+      size: 5678,
       encoding: '7bit',
       destination: '',
       filename: '',
@@ -292,19 +399,20 @@ describe('AboutService', () => {
         exec: jest.fn().mockResolvedValue(null),
       });
 
-      await expect(service.updateByLocale('en', mockDto, mockFile)).rejects.toThrow(
-        new NotFoundException(`No about info found for locale "en"`),
-      );
+      await expect(
+        service.updateByLocale('en', mockDto, mockImageFile, mockCvFile),
+      ).rejects.toThrow(new NotFoundException(`No about info found for locale "en"`));
     });
 
     it('should throw NotFoundException if general info does not exist', async () => {
-      const saveMock = jest.fn();
       const translationDoc = {
-        fullName: '',
-        role: '',
-        bio: '',
-        save: saveMock,
-        generalInfo: 'general-id',
+        title: 'Old Title',
+        bio: 'Old Bio',
+        tagline: 'Old Tagline',
+        cv: null,
+        save: jest.fn(),
+        general: 'general-id',
+        toObject: () => ({}),
       };
 
       mockTranslationModel.findOne.mockReturnValueOnce({
@@ -315,34 +423,44 @@ describe('AboutService', () => {
         exec: jest.fn().mockResolvedValue(null),
       });
 
-      await expect(service.updateByLocale('en', mockDto, mockFile)).rejects.toThrow(
-        new NotFoundException('General about info not found'),
-      );
+      await expect(
+        service.updateByLocale('en', mockDto, mockImageFile, mockCvFile),
+      ).rejects.toThrow(new NotFoundException('General about info not found'));
     });
 
-    it('should update translation and general info without new image', async () => {
+    it('should update translation and general info without new files', async () => {
       const saveTranslationMock = jest.fn();
       const saveGeneralMock = jest.fn();
 
       const translationDoc = {
-        fullName: '',
-        role: '',
-        bio: '',
+        title: 'Old Title',
+        bio: 'Old Bio',
+        tagline: 'Old Tagline',
+        cv: null,
         save: saveTranslationMock,
-        generalInfo: 'general-id',
+        general: 'general-id',
         toObject: () => ({
-          fullName: '',
-          role: '',
-          bio: '',
-          generalInfo: 'general-id',
+          title: mockDto.title,
+          bio: mockDto.bio,
+          tagline: mockDto.tagline,
+          cv: null,
+          general: 'general-id',
         }),
       };
 
       const generalDoc = {
-        socialLinks: {},
+        fullName: 'Old Name',
+        birthYear: 1990,
+        location: 'Old Location',
+        image: null,
+        positioningTags: ['Old', 'Tags'],
         save: saveGeneralMock,
         toObject: () => ({
-          socialLinks: {},
+          fullName: mockDto.fullName,
+          birthYear: mockDto.birthYear,
+          location: mockDto.location,
+          image: null,
+          positioningTags: mockDto.positioningTags,
         }),
       };
 
@@ -354,35 +472,127 @@ describe('AboutService', () => {
         exec: jest.fn().mockResolvedValue(generalDoc),
       });
 
-      await service.updateByLocale('en', mockDto, undefined);
+      await service.updateByLocale('en', mockDto);
 
+      expect(saveTranslationMock).toHaveBeenCalled();
+      expect(saveGeneralMock).toHaveBeenCalled();
+      expect(mockStorageService.uploadFile).not.toHaveBeenCalled();
+      expect(mockStorageService.deleteFile).not.toHaveBeenCalled();
+    });
+
+    it('should upload new files and delete old ones when provided', async () => {
+      const saveTranslationMock = jest.fn();
+      const saveGeneralMock = jest.fn();
+
+      const translationDoc = {
+        title: 'Old Title',
+        bio: 'Old Bio',
+        tagline: 'Old Tagline',
+        cv: {
+          publicId: 'old-cv-id',
+          url: 'https://old-cv.com/cv.pdf',
+        },
+        save: saveTranslationMock,
+        general: 'general-id',
+        toObject: () => ({
+          title: mockDto.title,
+          bio: mockDto.bio,
+          tagline: mockDto.tagline,
+          cv: {
+            publicId: 'new-cv-123',
+            url: 'http://storage.com/new-cv.pdf',
+          },
+          general: 'general-id',
+        }),
+      };
+
+      const generalDoc = {
+        fullName: 'Old Name',
+        birthYear: 1990,
+        location: 'Old Location',
+        image: {
+          publicId: 'old-image-id',
+          url: 'https://old-image.com/photo.jpg',
+        },
+        positioningTags: ['Old', 'Tags'],
+        save: saveGeneralMock,
+        toObject: () => ({
+          fullName: mockDto.fullName,
+          birthYear: mockDto.birthYear,
+          location: mockDto.location,
+          image: {
+            publicId: 'new-image-123',
+            url: 'http://storage.com/new-photo.jpg',
+          },
+          positioningTags: mockDto.positioningTags,
+        }),
+      };
+
+      mockTranslationModel.findOne.mockReturnValueOnce({
+        exec: jest.fn().mockResolvedValue(translationDoc),
+      });
+
+      mockGeneralModel.findById.mockReturnValueOnce({
+        exec: jest.fn().mockResolvedValue(generalDoc),
+      });
+
+      mockStorageService.uploadFile
+        .mockResolvedValueOnce({
+          publicId: 'new-cv-123',
+          url: 'http://storage.com/new-cv.pdf',
+        })
+        .mockResolvedValueOnce({
+          publicId: 'new-image-123',
+          url: 'http://storage.com/new-photo.jpg',
+        });
+
+      await service.updateByLocale('en', mockDto, mockImageFile, mockCvFile);
+
+      expect(mockStorageService.deleteFile).toHaveBeenCalledWith('old-cv-id');
+      expect(mockStorageService.deleteFile).toHaveBeenCalledWith('old-image-id');
+      expect(mockStorageService.uploadFile).toHaveBeenCalledTimes(2);
       expect(saveTranslationMock).toHaveBeenCalled();
       expect(saveGeneralMock).toHaveBeenCalled();
     });
 
-    it('should upload image and update general info if new image is provided', async () => {
+    it('should handle partial updates with pickDefined utility', async () => {
       const saveTranslationMock = jest.fn();
       const saveGeneralMock = jest.fn();
 
+      const partialDto = {
+        title: 'Only Title Updated',
+        fullName: 'Only Name Updated',
+      };
+
       const translationDoc = {
-        fullName: '',
-        role: '',
-        bio: '',
+        title: 'Old Title',
+        bio: 'Old Bio',
+        tagline: 'Old Tagline',
+        cv: null,
         save: saveTranslationMock,
-        generalInfo: 'general-id',
+        general: 'general-id',
         toObject: () => ({
-          fullName: '',
-          role: '',
-          bio: '',
-          generalInfo: 'general-id',
+          title: partialDto.title,
+          bio: 'Old Bio', // Should remain unchanged
+          tagline: 'Old Tagline', // Should remain unchanged
+          cv: null,
+          general: 'general-id',
         }),
       };
 
       const generalDoc = {
-        socialLinks: {},
+        fullName: 'Old Name',
+        birthYear: 1990,
+        location: 'Old Location',
+        image: null,
+        positioningTags: ['Old', 'Tags'],
         save: saveGeneralMock,
         toObject: () => ({
-          socialLinks: {},
+          fullName: partialDto.fullName,
+          birthYear: 1990, // Should remain unchanged
+          location: 'Old Location', // Should remain unchanged
+          image: null,
+          positioningTags: ['Old', 'Tags'], // Should remain unchanged
         }),
       };
 
@@ -394,14 +604,8 @@ describe('AboutService', () => {
         exec: jest.fn().mockResolvedValue(generalDoc),
       });
 
-      mockStorageService.uploadFile.mockResolvedValueOnce({
-        publicId: '123',
-        url: 'http://image.com/photo.jpg',
-      });
+      await service.updateByLocale('en', partialDto);
 
-      await service.updateByLocale('en', mockDto, mockFile);
-
-      expect(mockStorageService.uploadFile).toHaveBeenCalled();
       expect(saveTranslationMock).toHaveBeenCalled();
       expect(saveGeneralMock).toHaveBeenCalled();
     });
