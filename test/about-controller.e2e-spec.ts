@@ -1,18 +1,17 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
-import * as request from 'supertest';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import { AboutModule } from 'src/domains/portfolio/about/about.module';
-import { AboutService } from 'src/domains/portfolio/about/about.service';
+import * as request from 'supertest';
+import { AboutModule } from '../src/domains/portfolio/about/about.module';
+import { AboutService } from '../src/domains/portfolio/about/about.service';
+import { getModelToken, getConnectionToken } from '@nestjs/mongoose';
+import { JwtAuthGuard, RolesGuard } from '../src/common/guards';
 import { CreateAboutDto, UpdateAboutDto } from 'src/domains/portfolio/about/dtos';
-import { getConnectionToken, getModelToken } from '@nestjs/mongoose';
-import { AboutGeneral, AboutTranslation } from 'src/domains/portfolio/schemas/about.schema';
+import { AboutGeneral, AboutTranslation } from 'src/domains/portfolio/about/schemas';
 
 describe('AboutController (e2e)', () => {
   let app: INestApplication;
 
-  // AboutService
   const mockService = {
     getByLocale: jest.fn(),
     createByLocale: jest.fn(),
@@ -20,27 +19,24 @@ describe('AboutController (e2e)', () => {
   };
 
   beforeAll(async () => {
-    const moduleFixture = await Test.createTestingModule({
+    const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AboutModule],
     })
-      // Override the AboutService with a mock
       .overrideProvider(AboutService)
       .useValue(mockService)
-
-      // Mock the Mongoose connection and models
       .overrideProvider(getConnectionToken())
       .useValue({})
-
-      // Mock the models used in AboutService
       .overrideProvider(getModelToken(AboutGeneral.name, 'portfolio'))
       .useValue({})
       .overrideProvider(getModelToken(AboutTranslation.name, 'portfolio'))
       .useValue({})
-
-      // Mock the storage service
       .overrideProvider('IStorageService')
       .useValue({})
-
+      // 👇 Override guards to bypass auth/roles
+      .overrideGuard(JwtAuthGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(RolesGuard)
+      .useValue({ canActivate: () => true })
       .compile();
 
     app = moduleFixture.createNestApplication();
@@ -58,7 +54,8 @@ describe('AboutController (e2e)', () => {
         fullName: 'John Doe',
         role: 'Dev',
         bio: 'About me',
-        image: 'url',
+        image: 'image-url',
+        cv: 'cv-url',
         socialLinks: { github: 'x', linkedin: 'y' },
       };
 
@@ -73,13 +70,13 @@ describe('AboutController (e2e)', () => {
   });
 
   describe('POST /portfolio/about', () => {
-    it('should create about with image and return it', async () => {
+    it('should create about with files and return response', async () => {
       const dto: CreateAboutDto = {
         locale: 'en',
         fullName: 'Jane Doe',
-        role: 'Engineer',
+        title: 'Engineer',
         bio: 'Updated bio',
-        socialLinks: { github: 'x', linkedin: 'y' },
+        positioningTags: ['fullstack', 'nestjs'],
       };
 
       const mockResponse = { success: true };
@@ -89,23 +86,33 @@ describe('AboutController (e2e)', () => {
         .post('/portfolio/about')
         .field('locale', dto.locale)
         .field('fullName', dto.fullName)
-        .field('role', dto.role)
+        .field('title', dto.title)
         .field('bio', dto.bio)
-        .field('socialLinks[github]', dto.socialLinks!.github!)
-        .field('socialLinks[linkedin]', dto.socialLinks!.linkedin!)
-        .attach('file', Buffer.from('test'), {
+        .field('positioningTags', JSON.stringify(dto.positioningTags))
+        .attach('image', Buffer.from('image buffer'), {
           filename: 'photo.jpg',
           contentType: 'image/jpeg',
+        })
+        .attach('cv', Buffer.from('cv buffer'), {
+          filename: 'resume.pdf',
+          contentType: 'application/pdf',
         });
 
       expect(res.status).toBe(201);
       expect(res.body).toEqual(mockResponse);
+
       expect(mockService.createByLocale).toHaveBeenCalledWith(
-        expect.objectContaining(dto),
         expect.objectContaining({
-          buffer: expect.any(Buffer),
+          ...dto,
+          positioningTags: JSON.stringify(dto.positioningTags),
+        }),
+        expect.objectContaining({
           originalname: 'photo.jpg',
           mimetype: 'image/jpeg',
+        }),
+        expect.objectContaining({
+          originalname: 'resume.pdf',
+          mimetype: 'application/pdf',
         }),
       );
     });
@@ -115,9 +122,9 @@ describe('AboutController (e2e)', () => {
     it('should update about info and return it', async () => {
       const dto: UpdateAboutDto = {
         fullName: 'Updated',
-        role: 'Senior Dev',
+        title: 'Senior Dev',
         bio: 'Bio updated',
-        socialLinks: { github: 'x', linkedin: 'y' },
+        positioningTags: ['team lead', 'backend'],
       };
 
       const mockResponse = { updated: true };
@@ -126,31 +133,41 @@ describe('AboutController (e2e)', () => {
       const res = await request(app.getHttpServer())
         .patch('/portfolio/about/en')
         .field('fullName', dto.fullName!)
-        .field('role', dto.role!)
+        .field('title', dto.title!)
         .field('bio', dto.bio!)
-        .field('socialLinks[github]', dto.socialLinks!.github!)
-        .field('socialLinks[linkedin]', dto.socialLinks!.linkedin!)
-        .attach('file', Buffer.from('test'), {
+        .field('positioningTags', JSON.stringify(dto.positioningTags))
+        .attach('image', Buffer.from('image buffer'), {
           filename: 'new.jpg',
           contentType: 'image/jpeg',
+        })
+        .attach('cv', Buffer.from('new cv buffer'), {
+          filename: 'resume.docx',
+          contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         });
 
       expect(res.status).toBe(200);
       expect(res.body).toEqual(mockResponse);
       expect(mockService.updateByLocale).toHaveBeenCalledWith(
         'en',
-        expect.objectContaining(dto),
+        expect.objectContaining({
+          ...dto,
+          positioningTags: JSON.stringify(dto.positioningTags),
+        }),
+        expect.any(Object),
         expect.any(Object),
       );
     });
 
-    it('should return 400 if uploaded file is not an image', async () => {
+    it('should return 400 if image type is invalid', async () => {
       const res = await request(app.getHttpServer())
         .post('/portfolio/about')
         .field('locale', 'en')
-        .attach('file', Buffer.from('not an image'), {
-          filename: 'test.txt',
-          contentType: 'text/plain',
+        .field('fullName', 'Bad File')
+        .field('role', 'Role')
+        .field('bio', 'Bio')
+        .attach('image', Buffer.from('invalid'), {
+          filename: 'test.svg',
+          contentType: 'image/svg+xml',
         });
 
       expect(res.status).toBe(400);
