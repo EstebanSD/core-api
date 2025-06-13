@@ -5,11 +5,12 @@ import { FileMetadataSchema } from 'src/common/schemas';
 import { FileMetadata } from 'src/types/interfaces';
 
 export type ProjectGeneralDocument = HydratedDocument<ProjectGeneral>;
+export type ProjectGeneralPlain = ProjectGeneral;
 
 @Schema({ timestamps: true })
 export class ProjectGeneral {
-  @Prop({ required: true, enum: PROJECT_STATUSES })
-  status: ProjectStatus;
+  @Prop({ required: true, unique: true })
+  title: string;
 
   @Prop({ required: true, enum: PROJECT_TYPES })
   type: ProjectType;
@@ -19,6 +20,9 @@ export class ProjectGeneral {
 
   @Prop()
   endDate?: Date;
+
+  @Prop({ required: true, enum: PROJECT_STATUSES })
+  status: ProjectStatus;
 
   @Prop({ type: [String] })
   technologies?: string[];

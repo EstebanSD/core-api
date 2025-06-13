@@ -10,7 +10,12 @@ import {
   Delete,
 } from '@nestjs/common';
 import { ProjectService } from './project.service';
-import { CreateProjectDto, UpdateProjectDto, FindProjectsDto, AddTranslationDto } from './dtos';
+import {
+  CreateProjectGeneralDto,
+  UpdateProjectDto,
+  FindProjectsDto,
+  AddProjectTranslationDto,
+} from './dtos';
 import { Auth, MultiImageUploadInterceptor, Roles } from 'src/common/decorators';
 import { LocaleType } from 'src/types';
 
@@ -39,15 +44,15 @@ export class ProjectController {
   @Roles('Admin')
   @Post()
   @MultiImageUploadInterceptor({ maxCount: 5, maxSizeMB: 4, deniedTypes: ['image/svg+xml'] })
-  create(@Body() body: CreateProjectDto, @UploadedFiles() files: Express.Multer.File[]) {
-    return this.projectService.create(
-      body,
-      files?.map((file) => ({
-        fileBuffer: file.buffer,
-        filename: file.originalname,
-        mimetype: file.mimetype,
-      })),
-    );
+  create(@Body() body: CreateProjectGeneralDto, @UploadedFiles() files?: Express.Multer.File[]) {
+    return this.projectService.create(body, files);
+  }
+
+  @Auth()
+  @Roles('Admin')
+  @Post(':generalId/locale')
+  addTranslation(@Param('generalId') id: string, @Body() body: AddProjectTranslationDto) {
+    return this.projectService.addTranslation(id, body);
   }
 
   @Auth()
@@ -57,24 +62,9 @@ export class ProjectController {
   update(
     @Param('translationId') id: string,
     @Body() body: UpdateProjectDto,
-    @UploadedFiles() files: Express.Multer.File[],
+    @UploadedFiles() files?: Express.Multer.File[],
   ) {
-    return this.projectService.update(
-      id,
-      body,
-      files?.map((file) => ({
-        fileBuffer: file.buffer,
-        filename: file.originalname,
-        mimetype: file.mimetype,
-      })),
-    );
-  }
-
-  @Auth()
-  @Roles('Admin')
-  @Post(':generalId/locale')
-  addTranslation(@Param('generalId') id: string, @Body() body: AddTranslationDto) {
-    return this.projectService.addTranslation(id, body);
+    return this.projectService.update(id, body, files);
   }
 
   @Auth()

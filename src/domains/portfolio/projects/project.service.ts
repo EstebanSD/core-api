@@ -1,16 +1,27 @@
-import { Injectable, NotFoundException, ConflictException, Inject } from '@nestjs/common';
-import { Model, Types } from 'mongoose';
-import { InjectPortfolioModel } from 'src/common/helpers';
 import {
-  ProjectDocument,
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  Inject,
+  BadRequestException,
+} from '@nestjs/common';
+import { Model, Types } from 'mongoose';
+import { InjectPortfolioModel, pickDefined } from 'src/common/helpers';
+import {
   ProjectGeneral,
   ProjectGeneralDocument,
+  ProjectGeneralPlain,
   ProjectPlain,
   ProjectTranslation,
   ProjectTranslationDocument,
 } from './schemas';
-import { CreateProjectDto, UpdateProjectDto, FindProjectsDto, AddTranslationDto } from './dtos';
-import { IStorageService, StorageUploadParams, uploadMultiple } from 'src/libs/storage';
+import {
+  UpdateProjectDto,
+  FindProjectsDto,
+  CreateProjectGeneralDto,
+  AddProjectTranslationDto,
+} from './dtos';
+import { IStorageService, uploadMultiple } from 'src/libs/storage';
 import { LocaleType } from 'src/types';
 
 @Injectable()
@@ -23,39 +34,26 @@ export class ProjectService {
     @Inject('IStorageService') private readonly storageService: IStorageService,
   ) {}
 
-  async create(body: CreateProjectDto, files?: StorageUploadParams[]): Promise<ProjectPlain> {
-    const exists = await this.translationModel
-      .findOne({ title: body.title, locale: body.locale })
+  async findAllByLocale(query: FindProjectsDto): Promise<ProjectPlain[]> {
+    const { locale = 'en', title, status, type } = query;
+
+    const filter: Record<string, unknown> = {};
+    filter.locale = locale;
+
+    const translations = await this.translationModel
+      .find(filter)
+      .populate<{ general: ProjectGeneralDocument }>({
+        path: 'general',
+        match: {
+          ...(title && { title: { $regex: title, $options: 'i' } }),
+          ...(type && { type }),
+          ...(status && { status }),
+        },
+      })
       .lean()
       .exec();
 
-    if (exists) {
-      throw new ConflictException(
-        `Project with title "${body.title}" already exists for locale "${body.locale}"`,
-      );
-    }
-
-    const imagesData = await uploadMultiple(this.storageService, 'portfolio/projects', files ?? []);
-
-    const general = await this.generalModel.create({
-      status: body.status,
-      type: body.type,
-      startDate: body.startDate,
-      endDate: body.endDate,
-      technologies: body.technologies,
-      links: body.links,
-      images: imagesData,
-    });
-
-    const translation = await this.translationModel.create({
-      title: body.title,
-      description: body.description,
-      locale: body.locale,
-      general: general._id,
-    });
-
-    const populated = await translation.populate('general');
-    return populated.toObject() as unknown as ProjectPlain;
+    return translations.filter((t) => t.general);
   }
 
   async findGroupedByGeneral(query: FindProjectsDto): Promise<Record<string, ProjectPlain[]>> {
@@ -66,7 +64,7 @@ export class ProjectService {
 
     const translations = await this.translationModel
       .find(filter)
-      .populate<ProjectDocument>({
+      .populate<{ general: ProjectGeneralDocument }>({
         path: 'general',
         match: {
           ...(status && { status }),
@@ -84,119 +82,60 @@ export class ProjectService {
 
       if (!grouped[generalId]) grouped[generalId] = [];
 
-      grouped[generalId].push({
-        ...t,
-        general: {
-          ...(t.general as ProjectGeneral),
-          _id: generalId,
-        },
-      });
+      grouped[generalId].push(t);
     }
 
     return grouped;
-  }
-
-  async findAllByLocale(query: FindProjectsDto): Promise<ProjectPlain[]> {
-    const { locale = 'en', status, type } = query;
-
-    const filter: Record<string, string> = {};
-    filter.locale = locale;
-
-    const translations = await this.translationModel
-      .find(filter)
-      .populate<ProjectDocument>({
-        path: 'general',
-        match: {
-          ...(status && { status }),
-          ...(type && { type }),
-        },
-      })
-      .lean()
-      .exec();
-
-    return translations
-      .filter((t) => t.general)
-      .map((t) => ({
-        ...t,
-        general: {
-          ...(t.general as ProjectGeneral),
-          _id: t.general._id.toString(),
-        },
-      }));
   }
 
   async findOne(generalId: string, locale: LocaleType): Promise<ProjectPlain> {
     const generalObjectId = new Types.ObjectId(generalId);
     const translation = await this.translationModel
       .findOne({ general: generalObjectId, locale })
-      .populate<ProjectDocument>('general')
+      .populate<{ general: ProjectGeneralDocument }>('general')
       .exec();
 
     if (!translation || !translation.general) {
       throw new NotFoundException('Project not found');
     }
-    return translation.toObject() as unknown as ProjectPlain;
+    return translation.toObject();
   }
 
-  async update(
-    translationId: string,
-    body: UpdateProjectDto,
-    files?: StorageUploadParams[],
-  ): Promise<ProjectPlain> {
-    const translation = await this.translationModel
-      .findById(translationId)
-      .populate<ProjectDocument>('general')
-      .exec();
+  async create(
+    body: CreateProjectGeneralDto,
+    files?: Express.Multer.File[],
+  ): Promise<ProjectGeneralPlain> {
+    const exists = await this.generalModel.findOne({ title: body.title }).lean().exec();
 
-    if (!translation) {
-      throw new NotFoundException(`Project translation with id "${translationId}" not found`);
+    if (exists) {
+      throw new ConflictException(`Project with title "${body.title}" already exists`);
     }
 
-    const general = translation.general;
+    const imagesData = await uploadMultiple(this.storageService, 'portfolio/projects', files ?? []);
 
-    const { title, description, status, type, startDate, endDate, technologies, links } = body;
-
-    Object.assign(translation, {
-      ...(title && { title }),
-      ...(description && { description }),
+    const general = await this.generalModel.create({
+      title: body.title,
+      type: body.type,
+      startDate: body.startDate,
+      endDate: body.endDate,
+      status: body.status,
+      technologies: body.technologies,
+      links: body.links,
+      images: imagesData,
     });
 
-    Object.assign(general, {
-      ...(status && { status }),
-      ...(type && { type }),
-      ...(startDate !== undefined && { startDate }),
-      ...(endDate !== undefined && { endDate }),
-      ...(technologies !== undefined && { technologies }),
-      ...(links !== undefined && { links }),
-    });
-
-    if (files?.length) {
-      if (general.images?.length) {
-        await Promise.all(
-          general.images.map((img) => this.storageService.deleteFile(img.publicId)),
-        );
-      }
-
-      const imagesData = await uploadMultiple(this.storageService, 'portfolio/projects', files);
-      general.images = imagesData;
-    }
-
-    await general.save();
-    await translation.save();
-
-    const populated = await translation.populate('general');
-    return populated.toObject() as unknown as ProjectPlain;
+    return general.toObject();
   }
 
-  async addTranslation(generalId: string, body: AddTranslationDto): Promise<ProjectPlain> {
-    const general = await this.generalModel.findById(generalId).exec();
+  async addTranslation(generalId: string, body: AddProjectTranslationDto): Promise<ProjectPlain> {
+    const general = await this.generalModel.findById(generalId).lean().exec();
 
     if (!general) {
       throw new NotFoundException(`General project with id "${generalId}" not found`);
     }
 
     const exists = await this.translationModel.exists({
-      general: generalId,
+      general: general._id,
       locale: body.locale,
     });
 
@@ -211,8 +150,68 @@ export class ProjectService {
 
     return {
       ...translation.toObject(),
-      general: general.toObject() as unknown as ProjectGeneral & { _id: string },
+      general,
     };
+  }
+
+  async update(
+    translationId: string,
+    body: UpdateProjectDto,
+    files?: Express.Multer.File[],
+  ): Promise<ProjectPlain> {
+    const translation = await this.translationModel
+      .findById(translationId)
+      .populate<{ general: ProjectGeneralDocument }>('general')
+      .exec();
+
+    if (!translation) {
+      throw new NotFoundException(`Project translation with id "${translationId}" not found`);
+    }
+
+    const general = translation.general;
+
+    // Maintain title as unique
+    if (body.title && body.title !== general.title) {
+      const fastThrow = await this.generalModel.findOne({ title: body.title }).lean().exec();
+      if (fastThrow) {
+        throw new ConflictException(`Project with title "${body.title}" already exists`);
+      }
+    }
+
+    Object.assign(translation, pickDefined(body, ['description']));
+
+    Object.assign(
+      general,
+      pickDefined(body, [
+        'title',
+        'type',
+        'startDate',
+        'endDate',
+        'status',
+        'technologies',
+        'links',
+      ]),
+    );
+
+    // Dates Validations
+    this.validateProjectDates(general);
+
+    // TODO improve this. Because if I only change one image, they are all still deleted.
+    if (files?.length) {
+      if (general.images?.length) {
+        await Promise.all(
+          general.images.map((img) => this.storageService.deleteFile(img.publicId)),
+        );
+      }
+
+      const imagesData = await uploadMultiple(this.storageService, 'portfolio/projects', files);
+      general.images = imagesData;
+    }
+
+    await general.save();
+    await translation.save();
+
+    return { ...translation.toObject(), general: general.toObject() };
   }
 
   async deleteProject(generalId: string): Promise<void> {
@@ -237,7 +236,7 @@ export class ProjectService {
     const generalObjectId = new Types.ObjectId(generalId);
     const translation = await this.translationModel
       .findOne({ locale, general: generalObjectId })
-      .populate<ProjectDocument>('general')
+      .populate<{ general: ProjectGeneralDocument }>('general')
       .exec();
 
     if (!translation) {
@@ -262,5 +261,20 @@ export class ProjectService {
     }
 
     return { projectGeneralDeleted: false };
+  }
+
+  private validateProjectDates(doc: ProjectGeneralDocument) {
+    if (doc.startDate) {
+      const start = new Date(doc.startDate);
+      const end = doc.endDate ? new Date(doc.endDate) : null;
+
+      if (doc.status === 'completed' && !end) {
+        throw new BadRequestException('endDate is mandatory if status project is "completed"');
+      }
+
+      if (end && end <= start) {
+        throw new BadRequestException('End date must be after start date');
+      }
+    }
   }
 }
