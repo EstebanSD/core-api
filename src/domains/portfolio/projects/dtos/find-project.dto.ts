@@ -9,6 +9,10 @@ export class FindProjectsDto {
   locale?: LocaleType;
 
   @IsOptional()
+  @IsString()
+  title?: string;
+
+  @IsOptional()
   @IsEnum(PROJECT_STATUSES)
   status?: ProjectStatus;
 

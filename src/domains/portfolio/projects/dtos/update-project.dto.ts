@@ -1,4 +1,8 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateProjectDto } from './create-project.dto';
+import { IntersectionType, OmitType, PartialType } from '@nestjs/mapped-types';
+import { CreateProjectGeneralDto } from './create-project-general.dto';
+import { AddProjectTranslationDto } from './add-translation.dto';
 
-export class UpdateProjectDto extends PartialType(CreateProjectDto) {}
+export class UpdateProjectDto extends IntersectionType(
+  PartialType(CreateProjectGeneralDto),
+  PartialType(OmitType(AddProjectTranslationDto, ['locale'] as const)),
+) {}
