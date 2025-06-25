@@ -1,5 +1,5 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { InjectPortfolioModel } from 'src/common/helpers';
 import {
   SkillCategoryGeneral,
@@ -109,7 +109,8 @@ export class SkillItemService {
   }
 
   async findItemsByCategory(categoryId: string, filter: FilterItemDto): Promise<SkillItemPlain[]> {
-    const query: Record<string, any> = { category: categoryId };
+    const generalObjectId = new Types.ObjectId(categoryId);
+    const query: Record<string, any> = { category: generalObjectId };
 
     if (filter.name) {
       query.name = { $regex: filter.name, $options: 'i' };
