@@ -61,7 +61,7 @@ export class AboutService {
       await general.save();
     }
 
-    const cvData = cv ? await this.uploadFile(cv, 'portfolio/about') : null;
+    const cvData = cv ? await this.uploadFile(cv, 'portfolio/about', 'raw') : null;
 
     const translation = new this.translationModel({
       locale: body.locale,
@@ -105,7 +105,7 @@ export class AboutService {
         await this.storageService.deleteFile(translation.cv.publicId);
       }
 
-      translation.cv = await this.uploadFile(cv, 'portfolio/about');
+      translation.cv = await this.uploadFile(cv, 'portfolio/about', 'raw');
     }
 
     // Update general fields
@@ -130,12 +130,17 @@ export class AboutService {
     };
   }
 
-  private async uploadFile(file: Express.Multer.File, folder: string): Promise<FileMetadata> {
+  private async uploadFile(
+    file: Express.Multer.File,
+    folder: string,
+    resourceType?: 'image' | 'raw' | 'video',
+  ): Promise<FileMetadata> {
     const { publicId, url } = await this.storageService.uploadFile({
       fileBuffer: file.buffer,
       filename: file.originalname,
       mimetype: file.mimetype,
       folder,
+      resourceType,
     });
 
     return { publicId, url };
