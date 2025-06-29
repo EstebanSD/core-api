@@ -10,6 +10,10 @@ export class AppConfigService {
     return this.config.get('nodeEnv') === 'production';
   }
 
+  get env(): string {
+    return this.config.getOrThrow('nodeEnv');
+  }
+
   get port(): number {
     return this.config.getOrThrow('port');
   }

@@ -13,6 +13,7 @@ import { AboutModule } from './domains/portfolio/about/about.module';
 import { SkillModule } from './domains/portfolio/skills/skill.module';
 import { ContactModule } from './domains/portfolio/contact/contact.module';
 import { ExperienceModule } from './domains/portfolio/experience/experience.module';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
@@ -37,6 +38,14 @@ import { ExperienceModule } from './domains/portfolio/experience/experience.modu
         dbName: configService.getOrThrow<{ portfolio: string }>('mongoDatabases').portfolio,
       }),
       connectionName: DB_CONNECTIONS.PORTFOLIO,
+    }),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 60000, // 1 minute
+          limit: 100, // 100 requests
+        },
+      ],
     }),
 
     AuthModule,

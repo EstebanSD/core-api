@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { CustomLoggerService } from 'src/common/logger/custom-logger.service';
 import { AboutController } from './about.controller';
 import { AboutService } from './about.service';
 import {
@@ -23,6 +24,6 @@ import { DB_CONNECTIONS } from 'src/common/constants';
     StorageModule.registerAsync(),
   ],
   controllers: [AboutController],
-  providers: [AboutService],
+  providers: [AboutService, CustomLoggerService],
 })
 export class AboutModule {}

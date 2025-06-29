@@ -36,7 +36,7 @@ export class CloudinaryService implements IStorageService {
       const uploadOptions: UploadApiOptions = {
         resource_type: resourceType,
         public_id: uniqueName,
-        folder,
+        folder: this.configService.env + '/' + folder,
         format: ext,
       };
 
