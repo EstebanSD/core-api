@@ -178,7 +178,7 @@ export class ProjectService {
       }
     }
 
-    Object.assign(translation, pickDefined(body, ['description']));
+    Object.assign(translation, pickDefined(body, ['summary', 'description']));
 
     Object.assign(
       general,

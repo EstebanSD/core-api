@@ -60,6 +60,12 @@ export class ExperienceService {
 
     return translations
       .filter((t) => t.general)
+      .sort((a, b) => {
+        if (a.general.ongoing && !b.general.ongoing) return -1;
+        if (!a.general.ongoing && b.general.ongoing) return 1;
+
+        return new Date(b.general.startDate).getTime() - new Date(a.general.startDate).getTime();
+      })
       .map((t) => ({
         ...t,
         general: {
