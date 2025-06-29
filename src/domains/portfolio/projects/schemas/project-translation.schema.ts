@@ -15,6 +15,9 @@ export class ProjectTranslation {
   locale: string;
 
   @Prop({ required: true })
+  summary: string;
+
+  @Prop({ required: true })
   description: string;
 
   @Prop({ type: Types.ObjectId, ref: 'ProjectGeneral', required: true })
