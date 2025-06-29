@@ -9,5 +9,9 @@ export class AddProjectTranslationDto {
 
   @IsString()
   @IsNotEmpty()
+  summary: string;
+
+  @IsString()
+  @IsNotEmpty()
   description: string;
 }
