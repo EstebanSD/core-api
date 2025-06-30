@@ -10,7 +10,7 @@
     "npm": ">=8"
   },
   "scripts": {
-    "build": "node node_modules/@nestjs/cli/bin/nest.js build",
+    "build": "ls -l node_modules/@nestjs/cli/bin && node node_modules/@nestjs/cli/bin/nest.js build",
     "start": "NODE_ENV=production node dist/main",
     "start:dev": "NODE_ENV=development nest start --watch",
     "start:debug": "NODE_ENV=development nest start --debug --watch",
