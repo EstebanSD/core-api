@@ -10,10 +10,10 @@
     "npm": ">=8"
   },
   "scripts": {
-    "build": "npx nest build",
+    "build": "node node_modules/@nestjs/cli/bin/nest.js build",
     "start": "NODE_ENV=production node dist/main",
-    "start:dev": "NODE_ENV=development npx nest start --watch",
-    "start:debug": "NODE_ENV=development npx nest start --debug --watch",
+    "start:dev": "NODE_ENV=development nest start --watch",
+    "start:debug": "NODE_ENV=development nest start --debug --watch",
     "test": "NODE_ENV=test jest --testPathIgnorePatterns=test/",
     "test:e2e": "NODE_ENV=test jest --testMatch '**/*.e2e-spec.ts'",
     "test:watch": "NODE_ENV=test jest --watch",
@@ -24,6 +24,7 @@
     "prod": "npm run build && npm run start"
   },
   "dependencies": {
+    "@nestjs/cli": "^11.0.7",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
@@ -54,7 +55,6 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
-    "@nestjs/cli": "^11.0.7",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.1",
     "@swc/cli": "^0.6.0",
