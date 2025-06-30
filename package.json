@@ -5,6 +5,10 @@
   "author": "Esteban Salvay Dilena",
   "license": "MIT",
   "private": true,
+  "engines": {
+    "node": "20.x",
+    "npm": ">=8"
+  },
   "scripts": {
     "build": "npx nest build",
     "start": "NODE_ENV=production node dist/main",
