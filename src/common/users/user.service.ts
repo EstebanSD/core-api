@@ -23,5 +23,11 @@ export class UserService {
     return user.save();
   }
 
-  // TODO later: create, update, etc.
+  async updateRefreshToken(userId: string, refreshToken: string | null) {
+    return this.userModel.findByIdAndUpdate(userId, { refreshToken });
+  }
+
+  async findById(id: string): Promise<UserDocument | null> {
+    return this.userModel.findById(id);
+  }
 }
