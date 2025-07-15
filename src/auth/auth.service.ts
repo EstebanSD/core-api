@@ -1,15 +1,17 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserDocument, UserService } from 'src/common/users';
 import * as bcrypt from 'bcrypt';
 import { RegisterDto } from './dtos/register.dto';
 import { JwtPayload } from './types';
+import { CustomLoggerService } from 'src/common/logger/custom-logger.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UserService,
     private readonly jwtService: JwtService,
+    private readonly logger: CustomLoggerService,
   ) {}
 
   async register(body: RegisterDto): Promise<{ access_token: string }> {
@@ -27,10 +29,12 @@ export class AuthService {
       fullName: body.fullName,
     });
 
-    const payload = { sub: user._id, email: user.email };
-    const access_token = await this.jwtService.signAsync(payload);
+    const tokens = await this.generateTokens(user);
 
-    return { access_token };
+    // Save refresh token in to DB
+    await this.saveRefreshToken(user._id.toString(), tokens.refresh_token);
+
+    return tokens;
   }
 
   async validateUser(body: { email: string; password: string }): Promise<UserDocument | null> {
@@ -46,15 +50,68 @@ export class AuthService {
     return result as UserDocument;
   }
 
-  login(user: UserDocument) {
+  async login(user: UserDocument) {
+    const tokens = await this.generateTokens(user);
+
+    // Save the refresh token in the DB
+    await this.saveRefreshToken(user._id.toString(), tokens.refresh_token);
+
+    return {
+      ...tokens,
+      user: {
+        id: user._id.toString(),
+        email: user.email,
+        fullName: user.fullName,
+        role: user.role,
+      },
+    };
+  }
+
+  private async generateTokens(user: UserDocument) {
     const payload: JwtPayload = {
       sub: user._id.toString(),
       email: user.email,
       fullName: user.fullName,
       role: user.role,
     };
-    return {
-      access_token: this.jwtService.sign(payload),
-    };
+
+    const [access_token, refresh_token] = await Promise.all([
+      this.jwtService.signAsync(payload, { expiresIn: '15m' }),
+      this.jwtService.signAsync(payload, { expiresIn: '7d' }),
+    ]);
+
+    return { access_token, refresh_token };
+  }
+
+  async refreshToken(refreshToken: string) {
+    try {
+      const decoded = await this.jwtService.verifyAsync<JwtPayload>(refreshToken);
+
+      // Verify if the refresh token exists in the DB
+      const user = await this.usersService.findById(decoded.sub);
+      if (!user || !user.refreshToken || user.refreshToken !== refreshToken) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
+      // Generate new tokens
+      const tokens = await this.generateTokens(user);
+
+      // Update the refresh token in the DB
+      await this.saveRefreshToken(user._id.toString(), tokens.refresh_token);
+
+      return tokens;
+    } catch (error) {
+      this.logger.error('Error refreshing token', error, 'AuthService');
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+  }
+
+  async logout(userId: string) {
+    // Remove the refresh token from the DB
+    await this.usersService.updateRefreshToken(userId, null);
+  }
+
+  private async saveRefreshToken(userId: string, refreshToken: string) {
+    await this.usersService.updateRefreshToken(userId, refreshToken);
   }
 }
