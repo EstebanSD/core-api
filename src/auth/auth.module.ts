@@ -6,6 +6,7 @@ import { AppConfigModule, AppConfigService } from 'src/config';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { AuthController } from './auth.controller';
+import { CustomLoggerService } from 'src/common/logger/custom-logger.service';
 
 @Module({
   imports: [
@@ -21,7 +22,7 @@ import { AuthController } from './auth.controller';
     }),
     UserModule,
   ],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, CustomLoggerService],
   controllers: [AuthController],
   exports: [AuthService],
 })
