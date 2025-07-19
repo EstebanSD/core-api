@@ -6,8 +6,10 @@ export default () => ({
   allowedOrigins: process.env.ALLOWED_ORIGINS || 'http://localhost:3000',
   allowedHeaders: process.env.ALLOWED_HEADERS || 'Content-Type,Authorization',
 
+  bcryptSaltRounds: parseInt(process.env.BCRYPT_SALT_ROUNDS || '10', 10),
   jwtSecret: process.env.JWT_SECRET,
-  jwtExpiration: process.env.JWT_EXPIRATION,
+  jwtAccessExpiration: process.env.JWT_ACCESS_TOKEN_EXPIRES_IN,
+  jwtRefreshExpiration: process.env.JWT_REFRESH_TOKEN_EXPIRES_IN,
 
   mongoUri: process.env.MONGO_URI,
   mongoDatabases: {

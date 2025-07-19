@@ -8,8 +8,10 @@ export const validationSchema = Joi.object({
   ALLOWED_ORIGINS: Joi.string().default('http://localhost:3000'),
   ALLOWED_HEADERS: Joi.string().default('Content-Type,Authorization'),
 
+  BCRYPT_SALT_ROUNDS: Joi.number().default(10),
   JWT_SECRET: Joi.string().required(),
-  JWT_EXPIRATION: Joi.string().required(),
+  JWT_ACCESS_TOKEN_EXPIRES_IN: Joi.string().required(),
+  JWT_REFRESH_TOKEN_EXPIRES_IN: Joi.string().required(),
 
   MONGO_URI: Joi.string().required(),
   MONGO_DB_AUTH: Joi.string().required(),
