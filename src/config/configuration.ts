@@ -3,6 +3,9 @@ export default () => ({
   baseUrl: process.env.BASE_URL,
   nodeEnv: process.env.NODE_ENV ?? 'development',
 
+  allowedOrigins: process.env.ALLOWED_ORIGINS || 'http://localhost:3000',
+  allowedHeaders: process.env.ALLOWED_HEADERS || 'Content-Type,Authorization',
+
   jwtSecret: process.env.JWT_SECRET,
   jwtExpiration: process.env.JWT_EXPIRATION,
 

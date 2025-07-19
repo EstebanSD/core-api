@@ -5,6 +5,9 @@ export const validationSchema = Joi.object({
   BASE_URL: Joi.string().uri().required(),
   NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
 
+  ALLOWED_ORIGINS: Joi.string().default('http://localhost:3000'),
+  ALLOWED_HEADERS: Joi.string().default('Content-Type,Authorization'),
+
   JWT_SECRET: Joi.string().required(),
   JWT_EXPIRATION: Joi.string().required(),
 
