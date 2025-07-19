@@ -1,10 +1,11 @@
 import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UserDocument, UserService } from 'src/common/users';
 import * as bcrypt from 'bcrypt';
-import { RegisterDto } from './dtos/register.dto';
+import { UserDocument, UserService } from 'src/common/users';
+import { RegisterDto, LoginDto } from './dtos';
 import { JwtPayload } from './types';
 import { CustomLoggerService } from 'src/common/logger/custom-logger.service';
+import { AppConfigService } from 'src/config';
 
 @Injectable()
 export class AuthService {
@@ -12,16 +13,16 @@ export class AuthService {
     private readonly usersService: UserService,
     private readonly jwtService: JwtService,
     private readonly logger: CustomLoggerService,
+    private readonly config: AppConfigService,
   ) {}
 
-  async register(body: RegisterDto): Promise<{ access_token: string }> {
+  async register(body: RegisterDto) {
     const existing = await this.usersService.findByEmail(body.email);
     if (existing) {
       throw new ConflictException('Email is already registered');
     }
 
-    const saltRounds = 10;
-    const passwordHash = await bcrypt.hash(body.password, saltRounds);
+    const passwordHash = await bcrypt.hash(body.password, this.config.bcryptSaltRounds);
 
     const user = await this.usersService.create({
       email: body.email,
@@ -37,20 +38,12 @@ export class AuthService {
     return tokens;
   }
 
-  async validateUser(body: { email: string; password: string }): Promise<UserDocument | null> {
-    const user = await this.usersService.findByEmail(body.email);
-    if (!user) return null;
+  async login(body: LoginDto) {
+    const user = await this.validateUser(body.email, body.password);
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials.');
+    }
 
-    const passwordValid = await bcrypt.compare(body.password, user.passwordHash);
-    if (!passwordValid) return null;
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { passwordHash, ...result } = user.toObject();
-
-    return result as UserDocument;
-  }
-
-  async login(user: UserDocument) {
     const tokens = await this.generateTokens(user);
 
     // Save the refresh token in the DB
@@ -65,22 +58,6 @@ export class AuthService {
         role: user.role,
       },
     };
-  }
-
-  private async generateTokens(user: UserDocument) {
-    const payload: JwtPayload = {
-      sub: user._id.toString(),
-      email: user.email,
-      fullName: user.fullName,
-      role: user.role,
-    };
-
-    const [access_token, refresh_token] = await Promise.all([
-      this.jwtService.signAsync(payload, { expiresIn: '15m' }),
-      this.jwtService.signAsync(payload, { expiresIn: '7d' }),
-    ]);
-
-    return { access_token, refresh_token };
   }
 
   async refreshToken(refreshToken: string) {
@@ -109,6 +86,35 @@ export class AuthService {
   async logout(userId: string) {
     // Remove the refresh token from the DB
     await this.usersService.updateRefreshToken(userId, null);
+  }
+
+  private async validateUser(email: string, password: string): Promise<UserDocument | null> {
+    const user = await this.usersService.findByEmail(email);
+    if (!user) return null;
+
+    const passwordValid = await bcrypt.compare(password, user.passwordHash);
+    if (!passwordValid) return null;
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { passwordHash, ...result } = user.toObject();
+
+    return result as UserDocument;
+  }
+
+  private async generateTokens(user: UserDocument) {
+    const payload: JwtPayload = {
+      sub: user._id.toString(),
+      email: user.email,
+      fullName: user.fullName,
+      role: user.role,
+    };
+
+    const [access_token, refresh_token] = await Promise.all([
+      this.jwtService.signAsync(payload, { expiresIn: this.config.jwtAccessTokenExpiresIn }),
+      this.jwtService.signAsync(payload, { expiresIn: this.config.jwtRefreshTokenExpiresIn }),
+    ]);
+
+    return { access_token, refresh_token };
   }
 
   private async saveRefreshToken(userId: string, refreshToken: string) {
