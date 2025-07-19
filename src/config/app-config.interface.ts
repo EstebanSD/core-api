@@ -2,6 +2,8 @@ export interface AppConfig {
   port: number;
   baseUrl: string;
   nodeEnv: 'development' | 'production' | 'test';
+  allowedOrigins: string[];
+  allowedHeaders: string[];
   jwtSecret: string;
   jwtExpiration: string;
   mongoUri: string;
