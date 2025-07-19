@@ -26,6 +26,13 @@ export class AppConfigService {
     return `${this.baseUrl}/api`;
   }
 
+  get allowedOrigins(): string[] {
+    return this.config.getOrThrow<string>('allowedOrigins').split(',');
+  }
+  get allowedHeaders(): string[] {
+    return this.config.getOrThrow<string>('allowedHeaders').split(',');
+  }
+
   get jwtSecret(): string {
     return this.config.getOrThrow('jwtSecret');
   }
