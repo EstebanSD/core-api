@@ -17,7 +17,6 @@ import { CustomLoggerService } from 'src/common/logger/custom-logger.service';
       inject: [AppConfigService],
       useFactory: (configService: AppConfigService) => ({
         secret: configService.jwtSecret,
-        signOptions: { expiresIn: configService.jwtExpiration },
       }),
     }),
     UserModule,

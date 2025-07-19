@@ -4,8 +4,10 @@ export interface AppConfig {
   nodeEnv: 'development' | 'production' | 'test';
   allowedOrigins: string[];
   allowedHeaders: string[];
+  bcryptSaltRounds: number;
   jwtSecret: string;
-  jwtExpiration: string;
+  jwtAccessExpiration: string;
+  jwtRefreshExpiration: string;
   mongoUri: string;
   mongoDatabases: {
     auth: string;

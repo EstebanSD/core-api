@@ -33,12 +33,20 @@ export class AppConfigService {
     return this.config.getOrThrow<string>('allowedHeaders').split(',');
   }
 
+  get bcryptSaltRounds(): number {
+    return this.config.get('bcryptSaltRounds', 10);
+  }
+
   get jwtSecret(): string {
     return this.config.getOrThrow('jwtSecret');
   }
 
-  get jwtExpiration(): string {
-    return this.config.getOrThrow('jwtExpiration');
+  get jwtAccessTokenExpiresIn(): string {
+    return this.config.getOrThrow('jwtAccessExpiration');
+  }
+
+  get jwtRefreshTokenExpiresIn(): string {
+    return this.config.getOrThrow('jwtRefreshExpiration');
   }
 
   get mongoUri(): string {
