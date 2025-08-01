@@ -34,6 +34,13 @@ export class AboutController {
 
   @Auth()
   @Roles('Admin')
+  @Get()
+  getAll() {
+    return this.service.getAll();
+  }
+
+  @Auth()
+  @Roles('Admin')
   @Post()
   @MultiFieldUploadInterceptor([UploadImageField, UploadCvField])
   create(

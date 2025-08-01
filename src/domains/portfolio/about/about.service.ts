@@ -36,6 +36,18 @@ export class AboutService {
     };
   }
 
+  async getAll(): Promise<{ general: AboutGeneral; translations: AboutTranslation[] }> {
+    const general = await this.generalModel.findOne().lean().exec();
+    if (!general) throw new NotFoundException('General about info not found');
+
+    const translations = await this.translationModel.find().lean().exec();
+
+    return {
+      general,
+      translations,
+    };
+  }
+
   async createByLocale(
     body: CreateAboutDto,
     image?: Express.Multer.File,
