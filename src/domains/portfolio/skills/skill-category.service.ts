@@ -195,7 +195,7 @@ export class SkillCategoryService {
 
     await this.categoryTransModel.deleteMany({ general: categoryId }).exec();
 
-    await this.categoryGeneralModel.findByIdAndDelete(categoryId).exec();
+    await category.deleteOne();
   }
 
   async deleteCategoryTranslation(
@@ -208,7 +208,7 @@ export class SkillCategoryService {
         general: generalObjectId,
         locale,
       })
-      .lean()
+      .populate<{ general: SkillCategoryGeneralDocument }>('general')
       .exec();
 
     if (!translation) {
@@ -230,13 +230,15 @@ export class SkillCategoryService {
         );
       }
 
-      await this.categoryTransModel.deleteOne({ _id: translation._id }).exec();
-      await this.categoryGeneralModel.findByIdAndDelete(categoryId).exec();
+      const general = translation.general;
+
+      await translation.deleteOne();
+      await general.deleteOne();
 
       return { categoryGeneralDeleted: true };
     }
 
-    await this.categoryTransModel.deleteOne({ _id: translation._id }).exec();
+    await translation.deleteOne();
 
     return { categoryGeneralDeleted: false };
   }
