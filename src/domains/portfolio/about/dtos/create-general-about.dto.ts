@@ -1,27 +1,8 @@
 import { Transform, Type } from 'class-transformer';
-import { IsArray, IsIn, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { parseJsonArray } from 'src/common/helpers';
-import { LOCALE_ENUM, LocaleType } from 'src/types';
 
-export class CreateAboutDto {
-  @IsString()
-  @IsNotEmpty()
-  @IsIn(LOCALE_ENUM)
-  locale: LocaleType;
-
-  @IsString()
-  @IsNotEmpty()
-  title: string;
-
-  @IsString()
-  @IsNotEmpty()
-  bio: string;
-
-  @IsOptional()
-  @IsString()
-  tagline?: string;
-
-  // General //
+export class CreateGeneralAboutDto {
   @IsString()
   @IsNotEmpty()
   fullName: string;
