@@ -10,11 +10,25 @@ import {
   Req,
   Res,
   NotFoundException,
+  Delete,
+  UploadedFile,
 } from '@nestjs/common';
 import { CustomLoggerService } from 'src/common/logger/custom-logger.service';
 import { AboutService } from './about.service';
-import { CreateAboutDto, UpdateAboutDto } from './dtos';
-import { Auth, MultiFieldUploadInterceptor, Roles } from 'src/common/decorators';
+import {
+  AddTranslationAboutDto,
+  CreateGeneralAboutDto,
+  UpdateAboutDto,
+  UpdateGeneralAboutDto,
+  UpdateTranslationAboutDto,
+} from './dtos';
+import {
+  Auth,
+  DocumentUploadInterceptor,
+  ImageUploadInterceptor,
+  MultiFieldUploadInterceptor,
+  Roles,
+} from 'src/common/decorators';
 import { LocaleType } from 'src/types';
 import { UploadCvField, UploadImageField } from 'src/common/constants';
 import { Request, Response } from 'express';
@@ -34,19 +48,44 @@ export class AboutController {
 
   @Auth()
   @Roles('Admin')
-  @Post()
-  @MultiFieldUploadInterceptor([UploadImageField, UploadCvField])
-  create(
-    @Body() body: CreateAboutDto,
-    @UploadedFiles()
-    files: {
-      image?: Express.Multer.File[];
-      cv?: Express.Multer.File[];
-    },
+  @Get()
+  getAll() {
+    return this.service.getAll();
+  }
+
+  @Auth()
+  @Roles('Admin')
+  @Post('/general')
+  @ImageUploadInterceptor({ fieldName: 'image', deniedTypes: ['image/svg+xml'] })
+  create(@Body() body: CreateGeneralAboutDto, @UploadedFile() image?: Express.Multer.File) {
+    return this.service.createGeneral(body, image);
+  }
+
+  @Auth()
+  @Roles('Admin')
+  @Patch('/general')
+  @ImageUploadInterceptor({ fieldName: 'image', deniedTypes: ['image/svg+xml'] })
+  updateGeneral(@Body() body: UpdateGeneralAboutDto, @UploadedFile() image?: Express.Multer.File) {
+    return this.service.updateGeneral(body, image);
+  }
+
+  @Auth()
+  @Roles('Admin')
+  @Post('/locale')
+  @DocumentUploadInterceptor({ fieldName: 'cv' })
+  addTranslation(@Body() body: AddTranslationAboutDto, @UploadedFile() cv?: Express.Multer.File) {
+    return this.service.addTranslation(body, cv);
+  }
+
+  @Auth()
+  @Roles('Admin')
+  @Patch('/locale')
+  @DocumentUploadInterceptor({ fieldName: 'cv' })
+  updateTranslation(
+    @Body() body: UpdateTranslationAboutDto,
+    @UploadedFile() cv?: Express.Multer.File,
   ) {
-    const image = files.image?.[0];
-    const cv = files.cv?.[0];
-    return this.service.createByLocale(body, image, cv);
+    return this.service.updateTranslation(body, cv);
   }
 
   @Auth()
@@ -111,5 +150,12 @@ export class AboutController {
       );
       throw error;
     }
+  }
+
+  @Auth()
+  @Roles('Admin')
+  @Delete('locale/:locale')
+  deleteOne(@Param('locale') locale: LocaleType) {
+    return this.service.deleteTranslation(locale);
   }
 }

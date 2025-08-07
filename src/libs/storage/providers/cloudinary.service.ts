@@ -70,9 +70,14 @@ export class CloudinaryService implements IStorageService {
     }
   }
 
-  async deleteFile(publicId: string): Promise<void> {
+  async deleteFile(
+    publicId: string,
+    resourceType: 'image' | 'video' | 'raw' = 'image',
+  ): Promise<void> {
     try {
-      const { result } = (await cloudinary.uploader.destroy(publicId)) as CloudinaryDestroyResponse;
+      const { result } = (await cloudinary.uploader.destroy(publicId, {
+        resource_type: resourceType,
+      })) as CloudinaryDestroyResponse;
 
       if (result !== 'ok') {
         this.logger.warn(

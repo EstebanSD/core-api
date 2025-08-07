@@ -135,6 +135,6 @@ export class SkillItemService {
       await this.storageService.deleteFile(item.icon.publicId);
     }
 
-    await this.itemModel.deleteOne({ _id: itemId }).exec();
+    await item.deleteOne();
   }
 }

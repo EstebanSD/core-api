@@ -226,7 +226,7 @@ export class ProjectService {
 
     await this.translationModel.deleteMany({ general: general._id });
 
-    await this.generalModel.findByIdAndDelete(general._id);
+    await general.deleteOne();
   }
 
   async deleteTranslation(
@@ -245,7 +245,7 @@ export class ProjectService {
 
     const general = translation.general;
 
-    await this.translationModel.findByIdAndDelete(translation._id);
+    await translation.deleteOne();
 
     const remaining = await this.translationModel.countDocuments({ general: general._id });
     if (remaining === 0) {

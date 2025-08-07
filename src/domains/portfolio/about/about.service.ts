@@ -8,7 +8,13 @@ import {
   AboutTranslation,
   AboutTranslationDocument,
 } from './schemas';
-import { CreateAboutDto, UpdateAboutDto } from './dtos';
+import {
+  AddTranslationAboutDto,
+  CreateGeneralAboutDto,
+  UpdateAboutDto,
+  UpdateGeneralAboutDto,
+  UpdateTranslationAboutDto,
+} from './dtos';
 import { IStorageService } from 'src/libs/storage';
 import { LocaleType } from 'src/types';
 import { FileMetadata } from 'src/types/interfaces';
@@ -36,9 +42,62 @@ export class AboutService {
     };
   }
 
-  async createByLocale(
-    body: CreateAboutDto,
-    image?: Express.Multer.File,
+  async getAll(): Promise<{ general: AboutGeneral; translations: AboutTranslation[] }> {
+    const general = await this.generalModel.findOne().lean().exec();
+    if (!general) throw new NotFoundException('General about info not found');
+
+    const translations = await this.translationModel.find().lean().exec();
+
+    return {
+      general,
+      translations,
+    };
+  }
+
+  async createGeneral(body: CreateGeneralAboutDto, image?: Express.Multer.File) {
+    const exists = await this.generalModel.findOne().lean().exec();
+    if (exists) {
+      throw new ConflictException('About General info already exists');
+    }
+    const imageData = image ? await this.uploadFile(image, 'portfolio/about') : null;
+
+    const general = await this.generalModel.create({
+      fullName: body.fullName,
+      birthYear: body.birthYear,
+      location: body.location,
+      image: imageData,
+      positioningTags: body.positioningTags,
+    });
+
+    return general.toObject();
+  }
+
+  async updateGeneral(body: UpdateGeneralAboutDto, image?: Express.Multer.File) {
+    const general = await this.generalModel.findOne().exec();
+    if (!general) {
+      throw new NotFoundException('General about info not found');
+    }
+
+    Object.assign(
+      general,
+      pickDefined(body, ['fullName', 'birthYear', 'location', 'positioningTags']),
+    );
+
+    if (image) {
+      if (general.image?.publicId) {
+        await this.storageService.deleteFile(general.image.publicId);
+      }
+
+      general.image = await this.uploadFile(image, 'portfolio/about');
+    }
+
+    await general.save();
+
+    return general.toObject();
+  }
+
+  async addTranslation(
+    body: AddTranslationAboutDto,
     cv?: Express.Multer.File,
   ): Promise<AboutPlain> {
     const exists = await this.translationModel.findOne({ locale: body.locale }).lean().exec();
@@ -46,19 +105,9 @@ export class AboutService {
       throw new ConflictException(`About info already exists for locale "${body.locale}"`);
     }
 
-    let general: AboutGeneralDocument | null = await this.generalModel.findOne().exec();
+    const general = await this.generalModel.findOne().exec();
     if (!general) {
-      const imageData = image ? await this.uploadFile(image, 'portfolio/about') : null;
-
-      general = new this.generalModel({
-        fullName: body.fullName,
-        birthYear: body.birthYear,
-        location: body.location,
-        image: imageData,
-        positioningTags: body.positioningTags,
-      });
-
-      await general.save();
+      throw new NotFoundException('General about info not found');
     }
 
     const cvData = cv ? await this.uploadFile(cv, 'portfolio/about', 'raw') : null;
@@ -78,6 +127,34 @@ export class AboutService {
       ...translation.toObject(),
       general: general.toObject(),
     };
+  }
+
+  async updateTranslation(
+    body: UpdateTranslationAboutDto,
+    cv?: Express.Multer.File,
+  ): Promise<AboutPlain> {
+    const { locale } = body;
+    const translation = await this.translationModel
+      .findOne({ locale })
+      .populate<{ general: AboutGeneralDocument }>('general')
+      .exec();
+    if (!translation) {
+      throw new NotFoundException(`No about info found for locale "${locale}"`);
+    }
+
+    // Update translation fields
+    Object.assign(translation, pickDefined(body, ['title', 'bio', 'tagline']));
+    if (cv) {
+      if (translation.cv?.publicId) {
+        await this.storageService.deleteFile(translation.cv.publicId, 'raw');
+      }
+
+      translation.cv = await this.uploadFile(cv, 'portfolio/about', 'raw');
+    }
+
+    await translation.save();
+
+    return translation.toObject();
   }
 
   async updateByLocale(
@@ -102,7 +179,7 @@ export class AboutService {
     Object.assign(translation, pickDefined(body, ['title', 'bio', 'tagline']));
     if (cv) {
       if (translation.cv?.publicId) {
-        await this.storageService.deleteFile(translation.cv.publicId);
+        await this.storageService.deleteFile(translation.cv.publicId, 'raw');
       }
 
       translation.cv = await this.uploadFile(cv, 'portfolio/about', 'raw');
@@ -128,6 +205,20 @@ export class AboutService {
       ...translation.toObject(),
       general: general.toObject(),
     };
+  }
+
+  async deleteTranslation(locale: LocaleType) {
+    const translation = await this.translationModel.findOne({ locale }).exec();
+
+    if (!translation) {
+      throw new NotFoundException(`Translation with locale "${locale}" not found`);
+    }
+
+    if (translation.cv?.publicId) {
+      await this.storageService.deleteFile(translation.cv.publicId, 'raw');
+    }
+
+    await translation.deleteOne();
   }
 
   private async uploadFile(
