@@ -56,36 +56,50 @@ export class ProjectService {
     return translations.filter((t) => t.general);
   }
 
-  async findGroupedByGeneral(query: FindProjectsDto): Promise<Record<string, ProjectPlain[]>> {
-    const { locale, status, type } = query;
+  async findAllForAdmin() {
+    const projects = await this.generalModel.find().lean().exec();
 
-    const filter: Record<string, string> = {};
-    if (locale) filter.locale = locale;
+    if (!projects.length) {
+      return [];
+    }
 
+    const projectIds = projects.map((p) => p._id);
     const translations = await this.translationModel
-      .find(filter)
-      .populate<{ general: ProjectGeneralDocument }>({
-        path: 'general',
-        match: {
-          ...(status && { status }),
-          ...(type && { type }),
-        },
-      })
+      .find({ general: { $in: projectIds } })
       .lean()
       .exec();
 
-    const grouped: Record<string, ProjectPlain[]> = {};
+    const translationsMap = translations.reduce(
+      (acc, translation) => {
+        const projectId = translation.general.toString();
+        if (!acc[projectId]) {
+          acc[projectId] = [];
+        }
+        acc[projectId].push({
+          locale: translation.locale,
+          summary: translation.summary,
+          description: translation.description,
+        });
+        return acc;
+      },
+      {} as Record<string, Array<{ locale: string; summary: string; description: string }>>,
+    );
 
-    for (const t of translations) {
-      if (!t.general) continue;
-      const generalId = t.general._id.toString();
-
-      if (!grouped[generalId]) grouped[generalId] = [];
-
-      grouped[generalId].push(t);
-    }
-
-    return grouped;
+    return projects.map((project) => ({
+      _id: project._id.toString(),
+      title: project.title,
+      type: project.type,
+      status: project.status,
+      startDate: project.startDate ? project.startDate.toISOString().split('T')[0] : null,
+      endDate: project.endDate ? project.endDate.toISOString().split('T')[0] : null,
+      technologies: project.technologies || [],
+      links: {
+        github: project.links?.github || undefined,
+        website: project.links?.website || undefined,
+      },
+      images: project.images || [],
+      translations: translationsMap[project._id.toString()] || [],
+    }));
   }
 
   async findOne(generalId: string, locale: LocaleType): Promise<ProjectPlain> {

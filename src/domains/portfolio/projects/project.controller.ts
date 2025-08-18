@@ -30,9 +30,9 @@ export class ProjectController {
 
   @Auth()
   @Roles('Admin')
-  @Get('grouped')
-  findGroupedByGeneral(@Query() query: FindProjectsDto) {
-    return this.projectService.findGroupedByGeneral(query);
+  @Get('all')
+  findAllFormAdmin() {
+    return this.projectService.findAllForAdmin();
   }
 
   @Get(':generalId/locale/:locale')
