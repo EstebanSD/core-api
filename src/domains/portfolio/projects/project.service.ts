@@ -57,7 +57,7 @@ export class ProjectService {
   }
 
   async findAllForAdmin() {
-    const projects = await this.generalModel.find().lean().exec();
+    const projects = await this.generalModel.find().sort({ createdAt: -1 }).lean().exec();
 
     if (!projects.length) {
       return [];

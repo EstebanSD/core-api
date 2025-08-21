@@ -24,7 +24,7 @@ async function bootstrap() {
 
     const config = app.get(AppConfigService);
     const logger = app.get(CustomLoggerService);
-    const isProd = process.env.NODE_ENV === 'production';
+    const isProd = config.isProduction;
 
     const corsOptions = isProd
       ? {
