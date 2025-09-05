@@ -15,6 +15,7 @@ import {
   UpdateProjectDto,
   FindProjectsDto,
   AddProjectTranslationDto,
+  UpdateProjectGeneralDto,
 } from './dtos';
 import { Auth, MultiImageUploadInterceptor, Roles } from 'src/common/decorators';
 import { LocaleType } from 'src/types';
@@ -30,14 +31,21 @@ export class ProjectController {
 
   @Auth()
   @Roles('Admin')
-  @Get('grouped')
-  findGroupedByGeneral(@Query() query: FindProjectsDto) {
-    return this.projectService.findGroupedByGeneral(query);
+  @Get('all')
+  findAllFormAdmin() {
+    return this.projectService.findAllForAdmin();
   }
 
   @Get(':generalId/locale/:locale')
-  findOne(@Param('generalId') generalId: string, @Param('locale') locale: LocaleType) {
-    return this.projectService.findOne(generalId, locale);
+  findOneByLocale(@Param('generalId') generalId: string, @Param('locale') locale: LocaleType) {
+    return this.projectService.findOneByLocale(generalId, locale);
+  }
+
+  @Auth()
+  @Roles('Admin')
+  @Get(':generalId')
+  findOneForAdmin(@Param('generalId') generalId: string) {
+    return this.projectService.findOneForAdmin(generalId);
   }
 
   @Auth()
@@ -46,6 +54,18 @@ export class ProjectController {
   @MultiImageUploadInterceptor({ maxCount: 5, maxSizeMB: 4, deniedTypes: ['image/svg+xml'] })
   create(@Body() body: CreateProjectGeneralDto, @UploadedFiles() files?: Express.Multer.File[]) {
     return this.projectService.create(body, files);
+  }
+
+  @Auth()
+  @Roles('Admin')
+  @Patch('general/:generalId')
+  @MultiImageUploadInterceptor({ maxCount: 5, maxSizeMB: 4, deniedTypes: ['image/svg+xml'] })
+  updateGeneral(
+    @Param('generalId') id: string,
+    @Body() body: UpdateProjectGeneralDto,
+    @UploadedFiles() files?: Express.Multer.File[],
+  ) {
+    return this.projectService.updateGeneral(id, body, files);
   }
 
   @Auth()

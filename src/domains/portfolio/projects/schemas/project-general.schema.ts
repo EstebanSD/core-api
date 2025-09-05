@@ -41,6 +41,9 @@ export class ProjectGeneral {
 
   @Prop({ type: [FileMetadataSchema] })
   images?: FileMetadata[];
+
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export const ProjectGeneralSchema = SchemaFactory.createForClass(ProjectGeneral);
