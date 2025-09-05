@@ -20,6 +20,7 @@ import {
   FindProjectsDto,
   CreateProjectGeneralDto,
   AddProjectTranslationDto,
+  UpdateProjectGeneralDto,
 } from './dtos';
 import { IStorageService, uploadMultiple } from 'src/libs/storage';
 import { LocaleType } from 'src/types';
@@ -102,7 +103,7 @@ export class ProjectService {
     }));
   }
 
-  async findOne(generalId: string, locale: LocaleType): Promise<ProjectPlain> {
+  async findOneByLocale(generalId: string, locale: LocaleType): Promise<ProjectPlain> {
     const generalObjectId = new Types.ObjectId(generalId);
     const translation = await this.translationModel
       .findOne({ general: generalObjectId, locale })
@@ -113,6 +114,20 @@ export class ProjectService {
       throw new NotFoundException('Project not found');
     }
     return translation.toObject();
+  }
+
+  async findOneForAdmin(generalId: string) {
+    const project = await this.generalModel.findById(generalId).exec();
+    if (!project) {
+      throw new NotFoundException(`Project with id "${generalId}" not found`);
+    }
+
+    const translations = await this.translationModel.find({ general: project._id }).lean().exec();
+
+    return {
+      general: project.toObject(),
+      translations,
+    };
   }
 
   async create(
@@ -139,6 +154,52 @@ export class ProjectService {
     });
 
     return general.toObject();
+  }
+
+  async updateGeneral(
+    generalId: string,
+    body: UpdateProjectGeneralDto,
+    files?: Express.Multer.File[],
+  ) {
+    const general = await this.generalModel.findById(generalId).exec();
+
+    if (!general) {
+      throw new NotFoundException(`General project with id "${generalId}" not found`);
+    }
+
+    Object.assign(
+      general,
+      pickDefined(body, [
+        'title',
+        'type',
+        'startDate',
+        'endDate',
+        'status',
+        'technologies',
+        'links',
+      ]),
+    );
+
+    // Dates Validations
+    this.validateProjectDates(general);
+
+    // TODO improve this. Because if I only change one image, they are all still deleted.
+    if (files?.length) {
+      if (general.images?.length) {
+        await Promise.all(
+          general.images.map((img) => this.storageService.deleteFile(img.publicId)),
+        );
+      }
+
+      const imagesData = await uploadMultiple(this.storageService, 'portfolio/projects', files);
+      general.images = imagesData;
+    }
+
+    await general.save();
+
+    return {
+      ...general.toObject(),
+    };
   }
 
   async addTranslation(generalId: string, body: AddProjectTranslationDto): Promise<ProjectPlain> {
