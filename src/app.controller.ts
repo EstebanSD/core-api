@@ -8,4 +8,9 @@ export class AppController {
   getHealth() {
     return { status: 'API is running', timestamp: new Date().toISOString() };
   }
+
+  @Get('/ping')
+  getPing() {
+    return { status: 'pong', timestamp: new Date().toISOString() };
+  }
 }
