@@ -22,6 +22,8 @@ import {
   AddExpTranslationDto,
   FindExperiencesDto,
   UpdateExperienceDto,
+  UpdateExperienceGeneralDto,
+  UpdateExperienceTranslationDto,
 } from './dtos';
 import { FileMetadata } from 'src/types/interfaces';
 import { LocaleType } from 'src/types';
@@ -36,6 +38,66 @@ export class ExperienceService {
     @Inject('IStorageService') private readonly storageService: IStorageService,
     private readonly sanitizerService: SanitizerService,
   ) {}
+
+  async findAllForAdmin() {
+    const experiences = await this.generalModel.find().sort({ createdAt: -1 }).lean().exec();
+
+    if (!experiences.length) {
+      return [];
+    }
+
+    const experiencesId = experiences.map((p) => p._id);
+    const translations = await this.translationModel
+      .find({ general: { $in: experiencesId } })
+      .lean()
+      .exec();
+
+    const translationsMap = translations.reduce(
+      (acc, translation) => {
+        const experienceId = translation.general.toString();
+        if (!acc[experienceId]) {
+          acc[experienceId] = [];
+        }
+        acc[experienceId].push({
+          locale: translation.locale,
+          position: translation.position,
+          description: translation?.description,
+        });
+        return acc;
+      },
+      {} as Record<string, Array<{ locale: string; position: string; description?: string }>>,
+    );
+
+    return experiences.map((experience) => ({
+      _id: experience._id.toString(),
+      companyName: experience.companyName,
+      companyLogo: experience?.companyLogo,
+      type: experience.type,
+      location: experience?.location,
+      technologies: experience.technologies || [],
+      startDate: experience.startDate ? experience.startDate.toISOString().split('T')[0] : null,
+      endDate: experience.endDate ? experience.endDate.toISOString().split('T')[0] : null,
+      ongoing: experience?.ongoing,
+      translations: translationsMap[experience._id.toString()] || [],
+    }));
+  }
+
+  async findOneForAdmin(generalId: string) {
+    const experience = await this.generalModel.findById(generalId).exec();
+    if (!experience) {
+      throw new NotFoundException(`Experience with id "${generalId}" not found`);
+    }
+
+    const translations = await this.translationModel
+      .find({ general: experience._id })
+      .lean()
+      .exec();
+
+    return {
+      general: experience.toObject(),
+      translations,
+    };
+  }
 
   async findAllByLocale(query: FindExperiencesDto): Promise<ExperiencePlain[]> {
     const { locale = 'en', position, companyName, type } = query;
@@ -127,6 +189,64 @@ export class ExperienceService {
     return experience.toObject();
   }
 
+  async updateGeneral(
+    generalId: string,
+    body: UpdateExperienceGeneralDto,
+    logo?: Express.Multer.File,
+  ) {
+    const general = await this.generalModel.findById(generalId).exec();
+
+    if (!general) {
+      throw new NotFoundException(`General experience with id "${generalId}" not found`);
+    }
+
+    Object.assign(
+      general,
+      pickDefined(body, [
+        'companyName',
+        'type',
+        'location',
+        'ongoing',
+        'startDate',
+        'endDate',
+        'technologies',
+      ]),
+    );
+
+    // Dates Validations
+    this.validateExperienceDates(general);
+
+    if (logo) {
+      let fileBuffer = logo.buffer;
+
+      // If the file is an SVG, sanitize it
+      if (logo.mimetype === 'image/svg+xml') {
+        const rawSvg = logo.buffer.toString('utf-8');
+        const cleanSvg = this.sanitizerService.sanitizeSvg(rawSvg);
+        fileBuffer = Buffer.from(cleanSvg, 'utf-8');
+      }
+
+      if (general.companyLogo?.publicId) {
+        await this.storageService.deleteFile(general.companyLogo.publicId);
+      }
+
+      const { publicId, url } = await this.storageService.uploadFile({
+        fileBuffer,
+        filename: logo.originalname,
+        mimetype: logo.mimetype,
+        folder: 'portfolio/experiences',
+      });
+
+      general.companyLogo = { publicId, url };
+    }
+
+    await general.save();
+
+    return {
+      ...general.toObject(),
+    };
+  }
+
   async addTranslation(generalId: string, body: AddExpTranslationDto): Promise<ExperiencePlain> {
     const general = await this.generalModel.findById(generalId).lean().exec();
     if (!general) {
@@ -151,6 +271,27 @@ export class ExperienceService {
 
     const translation = await created.save();
     return { ...translation.toObject(), general };
+  }
+
+  async editTranslation(
+    generalId: string,
+    locale: LocaleType,
+    body: UpdateExperienceTranslationDto,
+  ): Promise<ExperiencePlain> {
+    const generalObjectId = new Types.ObjectId(generalId);
+    const translation = await this.translationModel
+      .findOne({ locale, general: generalObjectId })
+      .populate<{ general: ExperienceGeneralDocument }>('general')
+      .exec();
+    if (!translation) {
+      throw new NotFoundException(`No experience translation found for locale "${locale}"`);
+    }
+
+    Object.assign(translation, pickDefined(body, ['position', 'description']));
+
+    await translation.save();
+
+    return translation.toObject();
   }
 
   async update(
@@ -245,36 +386,17 @@ export class ExperienceService {
     await general.deleteOne();
   }
 
-  async deleteTranslation(
-    generalId: string,
-    locale: LocaleType,
-  ): Promise<{ experienceGeneralDeleted: boolean }> {
+  async deleteTranslation(generalId: string, locale: LocaleType): Promise<void> {
     const generalObjectId = new Types.ObjectId(generalId);
     const translation = await this.translationModel
       .findOne({ locale, general: generalObjectId })
-      .populate<{ general: ExperienceGeneralDocument }>('general')
       .exec();
 
     if (!translation) {
       throw new NotFoundException(`Translation with locale "${locale}" not found`);
     }
 
-    const general = translation.general;
-
     await translation.deleteOne();
-
-    const remaining = await this.translationModel.countDocuments({ general: general._id });
-    if (remaining === 0) {
-      if (general.companyLogo?.publicId) {
-        await this.storageService.deleteFile(general.companyLogo.publicId);
-      }
-
-      await this.generalModel.findByIdAndDelete(general._id);
-
-      return { experienceGeneralDeleted: true };
-    }
-
-    return { experienceGeneralDeleted: false };
   }
 
   private validateExperienceDates(doc: ExperienceGeneralDocument) {

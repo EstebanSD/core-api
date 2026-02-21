@@ -16,6 +16,8 @@ import {
   CreateExperienceGeneralDto,
   FindExperiencesDto,
   UpdateExperienceDto,
+  UpdateExperienceGeneralDto,
+  UpdateExperienceTranslationDto,
 } from './dtos';
 import { LocaleType } from 'src/types';
 
@@ -35,9 +37,23 @@ export class ExperienceController {
 
   @Auth()
   @Roles('Admin')
+  @Get('all')
+  findAllFormAdmin() {
+    return this.experienceService.findAllForAdmin();
+  }
+
+  @Auth()
+  @Roles('Admin')
+  @Get(':generalId')
+  findOneForAdmin(@Param('generalId') generalId: string) {
+    return this.experienceService.findOneForAdmin(generalId);
+  }
+
+  @Auth()
+  @Roles('Admin')
   @Post()
   @ImageUploadInterceptor({ fieldName: 'logo' })
-  createCategoryGeneral(
+  createGeneral(
     @Body() body: CreateExperienceGeneralDto,
     @UploadedFile() logo?: Express.Multer.File,
   ) {
@@ -46,9 +62,32 @@ export class ExperienceController {
 
   @Auth()
   @Roles('Admin')
+  @Patch('general/:generalId')
+  @ImageUploadInterceptor({ fieldName: 'logo' })
+  updateGeneral(
+    @Param('generalId') id: string,
+    @Body() body: UpdateExperienceGeneralDto,
+    @UploadedFile() logo: Express.Multer.File,
+  ) {
+    return this.experienceService.updateGeneral(id, body, logo);
+  }
+
+  @Auth()
+  @Roles('Admin')
   @Post(':generalId/locale')
-  createCategory(@Param('generalId') generalId: string, @Body() body: AddExpTranslationDto) {
+  addTranslation(@Param('generalId') generalId: string, @Body() body: AddExpTranslationDto) {
     return this.experienceService.addTranslation(generalId, body);
+  }
+
+  @Auth()
+  @Roles('Admin')
+  @Patch(':generalId/locale/:locale')
+  editTranslation(
+    @Param('generalId') id: string,
+    @Param('locale') locale: LocaleType,
+    @Body() body: UpdateExperienceTranslationDto,
+  ) {
+    return this.experienceService.editTranslation(id, locale, body);
   }
 
   @Auth()
