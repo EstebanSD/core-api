@@ -21,6 +21,7 @@ import {
   CreateProjectGeneralDto,
   AddProjectTranslationDto,
   UpdateProjectGeneralDto,
+  UpdateTranslationDto,
 } from './dtos';
 import { IStorageService, uploadMultiple } from 'src/libs/storage';
 import { LocaleType } from 'src/types';
@@ -229,6 +230,27 @@ export class ProjectService {
     };
   }
 
+  async editTranslation(
+    generalId: string,
+    locale: LocaleType,
+    body: UpdateTranslationDto,
+  ): Promise<ProjectPlain> {
+    const generalObjectId = new Types.ObjectId(generalId);
+    const translation = await this.translationModel
+      .findOne({ locale, general: generalObjectId })
+      .populate<{ general: ProjectGeneralDocument }>('general')
+      .exec();
+    if (!translation) {
+      throw new NotFoundException(`No project translation found for locale "${locale}"`);
+    }
+
+    Object.assign(translation, pickDefined(body, ['summary', 'description']));
+
+    await translation.save();
+
+    return translation.toObject();
+  }
+
   async update(
     translationId: string,
     body: UpdateProjectDto,
@@ -304,38 +326,17 @@ export class ProjectService {
     await general.deleteOne();
   }
 
-  async deleteTranslation(
-    generalId: string,
-    locale: LocaleType,
-  ): Promise<{ projectGeneralDeleted: boolean }> {
+  async deleteTranslation(generalId: string, locale: LocaleType): Promise<void> {
     const generalObjectId = new Types.ObjectId(generalId);
     const translation = await this.translationModel
       .findOne({ locale, general: generalObjectId })
-      .populate<{ general: ProjectGeneralDocument }>('general')
       .exec();
 
     if (!translation) {
       throw new NotFoundException(`Translation with locale "${locale}" not found`);
     }
 
-    const general = translation.general;
-
     await translation.deleteOne();
-
-    const remaining = await this.translationModel.countDocuments({ general: general._id });
-    if (remaining === 0) {
-      if (general.images?.length) {
-        await Promise.all(
-          general.images.map((img) => this.storageService.deleteFile(img.publicId)),
-        );
-      }
-
-      await this.generalModel.findByIdAndDelete(general._id);
-
-      return { projectGeneralDeleted: true };
-    }
-
-    return { projectGeneralDeleted: false };
   }
 
   private validateProjectDates(doc: ProjectGeneralDocument) {

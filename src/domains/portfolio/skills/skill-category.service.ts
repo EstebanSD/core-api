@@ -119,7 +119,45 @@ export class SkillCategoryService {
     return updated.toObject();
   }
 
-  async findAllCategories(
+  async findAllForAdmin(filter: FilterCategoryDto) {
+    const sortOrder = filter.order === 'desc' ? -1 : 1;
+
+    const categories = await this.categoryGeneralModel.find().sort({ order: sortOrder }).exec();
+
+    if (!categories.length) {
+      return [];
+    }
+
+    const categoriesId = categories.map((p) => p._id);
+    const translations = await this.categoryTransModel
+      .find({ general: { $in: categoriesId } })
+      .lean()
+      .exec();
+
+    const translationsMap = translations.reduce(
+      (acc, translation) => {
+        const categoryId = translation.general.toString();
+        if (!acc[categoryId]) {
+          acc[categoryId] = [];
+        }
+        acc[categoryId].push({
+          locale: translation.locale,
+          name: translation.name,
+        });
+        return acc;
+      },
+      {} as Record<string, Array<{ locale: string; name: string }>>,
+    );
+
+    return categories.map((category) => ({
+      _id: category._id.toString(),
+      key: category.key,
+      order: category.order,
+      translations: translationsMap[category._id.toString()] || [],
+    }));
+  }
+
+  async findCategoriesByLocale(
     locale: string,
     filter: FilterCategoryDto,
   ): Promise<SkillCategoryTransPlain[]> {
@@ -183,17 +221,18 @@ export class SkillCategoryService {
   }
 
   async deleteCategory(categoryId: string): Promise<void> {
-    const category = await this.categoryGeneralModel.findById(categoryId).exec();
+    const categoryObjectId = new Types.ObjectId(categoryId);
+    const category = await this.categoryGeneralModel.findById(categoryObjectId).exec();
     if (!category) {
       throw new NotFoundException(`Category with id "${categoryId}" not found`);
     }
 
-    const hasItems = await this.itemModel.exists({ category: categoryId });
+    const hasItems = await this.itemModel.exists({ category: categoryObjectId });
     if (hasItems) {
       throw new BadRequestException(`Cannot delete category with existing skill items`);
     }
 
-    await this.categoryTransModel.deleteMany({ general: categoryId }).exec();
+    await this.categoryTransModel.deleteMany({ general: categoryObjectId }).exec();
 
     await category.deleteOne();
   }

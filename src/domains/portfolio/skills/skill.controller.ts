@@ -31,9 +31,14 @@ export class SkillController {
     private readonly skillItemService: SkillItemService,
   ) {}
 
+  @Get('categories')
+  findAllCategories(@Query() query: FilterCategoryDto) {
+    return this.skillCategoryService.findAllForAdmin(query);
+  }
+
   @Get('categories/:locale')
-  findAllCategories(@Param('locale') locale: LocaleType, @Query() query: FilterCategoryDto) {
-    return this.skillCategoryService.findAllCategories(locale, query);
+  findCategoriesByLocale(@Param('locale') locale: LocaleType, @Query() query: FilterCategoryDto) {
+    return this.skillCategoryService.findCategoriesByLocale(locale, query);
   }
 
   @Get('categories/:generalId/locale/:locale')
@@ -51,7 +56,10 @@ export class SkillController {
   @Auth()
   @Roles('Admin')
   @Post('categories/:generalId/locale')
-  createCategory(@Param('generalId') generalId: string, @Body() body: AddSkillTranslationDto) {
+  addCategoryTranslation(
+    @Param('generalId') generalId: string,
+    @Body() body: AddSkillTranslationDto,
+  ) {
     return this.skillCategoryService.addCategoryTranslation(generalId, body);
   }
 
