@@ -16,6 +16,7 @@ import {
   FindProjectsDto,
   AddProjectTranslationDto,
   UpdateProjectGeneralDto,
+  UpdateTranslationDto,
 } from './dtos';
 import { Auth, MultiImageUploadInterceptor, Roles } from 'src/common/decorators';
 import { LocaleType } from 'src/types';
@@ -73,6 +74,17 @@ export class ProjectController {
   @Post(':generalId/locale')
   addTranslation(@Param('generalId') id: string, @Body() body: AddProjectTranslationDto) {
     return this.projectService.addTranslation(id, body);
+  }
+
+  @Auth()
+  @Roles('Admin')
+  @Patch(':generalId/locale/:locale')
+  editTranslation(
+    @Param('generalId') id: string,
+    @Param('locale') locale: LocaleType,
+    @Body() body: UpdateTranslationDto,
+  ) {
+    return this.projectService.editTranslation(id, locale, body);
   }
 
   @Auth()
