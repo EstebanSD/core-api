@@ -35,5 +35,5 @@ export const validationSchema = Joi.object({
     otherwise: Joi.optional(),
   }),
 
-  AI_PROVIDER: Joi.string(),
+  AI_PROVIDER: Joi.string().valid('mock', 'ollama', 'openai').default('mock'),
 });

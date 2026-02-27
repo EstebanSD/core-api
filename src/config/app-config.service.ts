@@ -73,8 +73,8 @@ export class AppConfigService {
     return cloudinary;
   }
 
-  get aiProvider(): string {
-    const { provider } = this.config.getOrThrow<{ provider: string }>('ai');
+  get aiProvider(): 'mock' | 'ollama' | 'openai' {
+    const { provider } = this.config.getOrThrow<{ provider: 'mock' | 'ollama' | 'openai' }>('ai');
     return provider;
   }
 }
