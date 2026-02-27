@@ -41,11 +41,11 @@ export class AppConfigService {
     return this.config.getOrThrow('jwtSecret');
   }
 
-  get jwtAccessTokenExpiresIn(): string {
+  get jwtAccessTokenExpiresIn(): number {
     return this.config.getOrThrow('jwtAccessExpiration');
   }
 
-  get jwtRefreshTokenExpiresIn(): string {
+  get jwtRefreshTokenExpiresIn(): number {
     return this.config.getOrThrow('jwtRefreshExpiration');
   }
 
