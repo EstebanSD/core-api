@@ -6,8 +6,8 @@ export interface AppConfig {
   allowedHeaders: string[];
   bcryptSaltRounds: number;
   jwtSecret: string;
-  jwtAccessExpiration: string;
-  jwtRefreshExpiration: string;
+  jwtAccessExpiration: number;
+  jwtRefreshExpiration: number;
   mongoUri: string;
   mongoDatabases: {
     auth: string;

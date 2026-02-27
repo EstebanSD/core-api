@@ -8,8 +8,8 @@ export default () => ({
 
   bcryptSaltRounds: parseInt(process.env.BCRYPT_SALT_ROUNDS || '10', 10),
   jwtSecret: process.env.JWT_SECRET,
-  jwtAccessExpiration: process.env.JWT_ACCESS_TOKEN_EXPIRES_IN,
-  jwtRefreshExpiration: process.env.JWT_REFRESH_TOKEN_EXPIRES_IN,
+  jwtAccessExpiration: Number(process.env.JWT_ACCESS_TOKEN_EXPIRES_IN),
+  jwtRefreshExpiration: Number(process.env.JWT_REFRESH_TOKEN_EXPIRES_IN),
 
   mongoUri: process.env.MONGO_URI,
   mongoDatabases: {

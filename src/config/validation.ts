@@ -10,8 +10,8 @@ export const validationSchema = Joi.object({
 
   BCRYPT_SALT_ROUNDS: Joi.number().default(10),
   JWT_SECRET: Joi.string().required(),
-  JWT_ACCESS_TOKEN_EXPIRES_IN: Joi.string().required(),
-  JWT_REFRESH_TOKEN_EXPIRES_IN: Joi.string().required(),
+  JWT_ACCESS_TOKEN_EXPIRES_IN: Joi.number().required(),
+  JWT_REFRESH_TOKEN_EXPIRES_IN: Joi.number().required(),
 
   MONGO_URI: Joi.string().required(),
   MONGO_DB_AUTH: Joi.string().required(),
