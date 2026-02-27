@@ -14,6 +14,7 @@ import { SkillModule } from './domains/portfolio/skills/skill.module';
 import { ContactModule } from './domains/portfolio/contact/contact.module';
 import { ExperienceModule } from './domains/portfolio/experience/experience.module';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { AiModule } from './domains/ai/ai.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
     SkillModule,
     ContactModule,
     ExperienceModule,
+    AiModule,
   ],
   controllers: [AppController],
 })

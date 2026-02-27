@@ -25,4 +25,8 @@ export default () => ({
       apiSecret: process.env.CLOUDINARY_API_SECRET,
     },
   },
+
+  ai: {
+    provider: process.env.AI_PROVIDER || 'mock',
+  },
 });

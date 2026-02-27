@@ -72,4 +72,9 @@ export class AppConfigService {
     const { cloudinary } = this.config.getOrThrow<AppConfig['storage']>('storage');
     return cloudinary;
   }
+
+  get aiProvider(): string {
+    const { provider } = this.config.getOrThrow<{ provider: string }>('ai');
+    return provider;
+  }
 }
