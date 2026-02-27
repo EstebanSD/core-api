@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 import { AppConfigModule, AppConfigService } from 'src/config';
 import { CustomLoggerService } from 'src/common/logger/custom-logger.service';
 import { AI_PROVIDER } from './domain/ai.tokens';
-import { MockProvider } from './infrastructure/providers/mock';
-import { OllamaProvider } from './infrastructure/providers/ollama';
+import { AIProviderFactory } from './infrastructure/ai-provider.factory';
+import { AIMetricsService } from './infrastructure/metrics/ai-metrics.service';
 import {
   ClassifyContentUseCase,
   ExtractKeywordsUseCase,
@@ -21,19 +21,12 @@ import { AiTestController } from './ai.controller';
     GenerateSummaryUseCase,
     {
       provide: AI_PROVIDER,
-      inject: [AppConfigService, CustomLoggerService],
-      useFactory: (config: AppConfigService, logger: CustomLoggerService) => {
-        switch (config.aiProvider) {
-          case 'ollama':
-            return new OllamaProvider(logger);
-
-          case 'mock':
-            return new MockProvider();
-
-          default:
-            throw new Error('Unsupported AI provider');
-        }
-      },
+      inject: [AppConfigService, CustomLoggerService, AIMetricsService],
+      useFactory: (
+        config: AppConfigService,
+        logger: CustomLoggerService,
+        metrics: AIMetricsService,
+      ) => AIProviderFactory.create(config, logger, metrics),
     },
   ],
   controllers: [AiTestController],
