@@ -72,4 +72,9 @@ export class AppConfigService {
     const { cloudinary } = this.config.getOrThrow<AppConfig['storage']>('storage');
     return cloudinary;
   }
+
+  get aiProvider(): 'mock' | 'ollama' | 'openai' {
+    const { provider } = this.config.getOrThrow<{ provider: 'mock' | 'ollama' | 'openai' }>('ai');
+    return provider;
+  }
 }

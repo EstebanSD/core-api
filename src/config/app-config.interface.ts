@@ -21,4 +21,7 @@ export interface AppConfig {
       apiSecret: string;
     };
   };
+  ai: {
+    provider: 'mock' | 'ollama' | 'openai';
+  };
 }
