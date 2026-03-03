@@ -18,7 +18,6 @@ export const validationSchema = Joi.object({
   MONGO_DB_PORTFOLIO: Joi.string().required(),
 
   STORAGE_PROVIDER: Joi.string().valid('local', 'cloudinary', 's3').required(),
-
   CLOUDINARY_CLOUD_NAME: Joi.string().when('STORAGE_PROVIDER', {
     is: 'cloudinary',
     then: Joi.required(),
@@ -36,4 +35,11 @@ export const validationSchema = Joi.object({
   }),
 
   AI_PROVIDER: Joi.string().valid('mock', 'ollama', 'openai').default('mock'),
+  AI_MODEL: Joi.string().required(),
+  AI_API_KEY: Joi.string().required(),
+  OLLAMA_BASE_URL: Joi.string().when('AI_PROVIDER', {
+    is: 'ollama',
+    then: Joi.required(),
+    otherwise: Joi.optional(),
+  }),
 });

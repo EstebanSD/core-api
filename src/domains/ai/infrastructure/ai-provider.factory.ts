@@ -15,7 +15,7 @@ export class AIProviderFactory {
 
     switch (providerType) {
       case 'ollama':
-        return new OllamaProvider(logger, metrics);
+        return new OllamaProvider(config, logger, metrics);
 
       case 'mock':
         return new MockProvider();

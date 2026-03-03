@@ -1,8 +1,8 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { GenerateSummaryUseCase } from './application/use-cases';
 
-@Controller('ai-test')
-export class AiTestController {
+@Controller('ai')
+export class AiController {
   constructor(private readonly summary: GenerateSummaryUseCase) {}
 
   @Post('summary')

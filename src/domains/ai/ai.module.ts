@@ -10,7 +10,8 @@ import {
   GenerateSeoMetaUseCase,
   GenerateSummaryUseCase,
 } from './application/use-cases';
-import { AiTestController } from './ai.controller';
+import { AiController } from './ai.controller';
+import { AIMetricsController } from './ai-metrics.controller';
 
 @Module({
   imports: [AppConfigModule],
@@ -28,8 +29,9 @@ import { AiTestController } from './ai.controller';
         metrics: AIMetricsService,
       ) => AIProviderFactory.create(config, logger, metrics),
     },
+    AIMetricsService,
   ],
-  controllers: [AiTestController],
+  controllers: [AiController, AIMetricsController],
   exports: [
     ClassifyContentUseCase,
     ExtractKeywordsUseCase,

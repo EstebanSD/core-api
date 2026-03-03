@@ -23,5 +23,8 @@ export interface AppConfig {
   };
   ai: {
     provider: 'mock' | 'ollama' | 'openai';
+    model: string;
+    apiKey: string;
+    ollamaBaseUrl: string;
   };
 }
