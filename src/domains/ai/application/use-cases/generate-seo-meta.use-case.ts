@@ -1,6 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { AI_PROVIDER } from '../../domain/ai.tokens';
 import type { AIProvider } from '../../domain/ai-provider.interface';
+import { AIProviderError } from '../../domain/errors/ai-provider.error';
+import { AIUseCaseError } from '../errors/ai-use-case.error';
 
 @Injectable()
 export class GenerateSeoMetaUseCase {
@@ -10,9 +12,10 @@ export class GenerateSeoMetaUseCase {
   ) {}
 
   async execute(content: string) {
-    return this.provider.generateText({
-      task: 'seo-meta',
-      content: `
+    try {
+      return await this.provider.generateText({
+        task: 'seo-meta',
+        content: `
         Generate SEO metadata for the following content.
 
         Return:
@@ -22,7 +25,14 @@ export class GenerateSeoMetaUseCase {
 
         ${content}
       `,
-      maxTokens: 200,
-    });
+        maxTokens: 200,
+      });
+    } catch (error: unknown) {
+      if (error instanceof AIProviderError) {
+        throw error;
+      }
+
+      throw new AIUseCaseError('Generate seo-meta use case failed', 'seo-meta', error);
+    }
   }
 }

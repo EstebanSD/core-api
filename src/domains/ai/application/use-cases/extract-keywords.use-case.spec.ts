@@ -1,6 +1,8 @@
 import { ExtractKeywordsUseCase } from './extract-keywords.use-case';
 import type { AIProvider } from '../../domain/ai-provider.interface';
+import { AIProviderError } from '../../domain/errors/ai-provider.error';
 import { createMockAIProvider } from '../../testing/create-mock-ai-provider';
+import { AIUseCaseError } from '../errors/ai-use-case.error';
 
 describe('ExtractKeywordsUseCase', () => {
   let useCase: ExtractKeywordsUseCase;
@@ -67,5 +69,38 @@ describe('ExtractKeywordsUseCase', () => {
     const callArgs = mockGenerateText.mock.calls[0][0];
 
     expect(callArgs.content).toContain('Extract the 0 most relevant keywords');
+  });
+
+  it('should propagate provider errors', async () => {
+    const { provider, mockGenerateText } = createMockAIProvider();
+    const error = new AIProviderError('Provider request failed', 'keywords', 'mock');
+    mockGenerateText.mockRejectedValueOnce(error);
+
+    const useCase = new ExtractKeywordsUseCase(provider);
+
+    await expect(useCase.execute('content')).rejects.toBeInstanceOf(AIProviderError);
+    await useCase.execute('content').catch((err: AIProviderError) => {
+      expect(err.message).toBe('Provider request failed');
+      expect(err.task).toBe('keywords');
+      expect(err.cause).toBeDefined();
+    });
+  });
+
+  it('should wrap unknown errors in AIUseCaseError', async () => {
+    const { provider, mockGenerateText } = createMockAIProvider();
+
+    const unknownError = new Error('Unexpected crash');
+    mockGenerateText.mockRejectedValueOnce(unknownError);
+
+    const useCase = new ExtractKeywordsUseCase(provider);
+
+    const execution = useCase.execute('content');
+
+    await expect(execution).rejects.toBeInstanceOf(AIUseCaseError);
+
+    await execution.catch((err: AIUseCaseError) => {
+      expect(err.task).toBe('keywords');
+      expect(err.cause).toBe(unknownError);
+    });
   });
 });

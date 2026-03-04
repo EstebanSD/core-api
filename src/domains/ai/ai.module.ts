@@ -1,9 +1,8 @@
 import { Module } from '@nestjs/common';
-import { AppConfigModule, AppConfigService } from 'src/config';
-import { CustomLoggerService } from 'src/common/logger/custom-logger.service';
-import { AI_PROVIDER } from './domain/ai.tokens';
-import { AIProviderFactory } from './infrastructure/ai-provider.factory';
+import { AppConfigModule } from 'src/config';
 import { AIMetricsService } from './infrastructure/metrics/ai-metrics.service';
+import { InMemoryAICacheService } from './infrastructure/cache/in-memory-ai-cache.service';
+import { AIProviderBinding } from './infrastructure/providers/ai-provider.binding';
 import {
   ClassifyContentUseCase,
   ExtractKeywordsUseCase,
@@ -16,20 +15,18 @@ import { AIMetricsController } from './ai-metrics.controller';
 @Module({
   imports: [AppConfigModule],
   providers: [
+    // Infrastructure
+    InMemoryAICacheService,
+    AIMetricsService,
+
+    // Application (Use Cases)
     ClassifyContentUseCase,
     ExtractKeywordsUseCase,
     GenerateSeoMetaUseCase,
     GenerateSummaryUseCase,
-    {
-      provide: AI_PROVIDER,
-      inject: [AppConfigService, CustomLoggerService, AIMetricsService],
-      useFactory: (
-        config: AppConfigService,
-        logger: CustomLoggerService,
-        metrics: AIMetricsService,
-      ) => AIProviderFactory.create(config, logger, metrics),
-    },
-    AIMetricsService,
+
+    // Provider binding
+    AIProviderBinding,
   ],
   controllers: [AiController, AIMetricsController],
   exports: [

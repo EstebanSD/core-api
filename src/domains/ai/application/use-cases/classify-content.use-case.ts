@@ -1,6 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { AI_PROVIDER } from '../../domain/ai.tokens';
 import type { AIProvider } from '../../domain/ai-provider.interface';
+import { AIProviderError } from '../../domain/errors/ai-provider.error';
+import { AIUseCaseError } from '../errors/ai-use-case.error';
 
 @Injectable()
 export class ClassifyContentUseCase {
@@ -10,9 +12,10 @@ export class ClassifyContentUseCase {
   ) {}
 
   async execute(content: string, categories: string[]) {
-    return this.provider.generateText({
-      task: 'classification',
-      content: `
+    try {
+      return await this.provider.generateText({
+        task: 'classification',
+        content: `
         Classify the following content into one of these categories:
         ${categories.join(', ')}
 
@@ -20,7 +23,14 @@ export class ClassifyContentUseCase {
 
         ${content}
       `,
-      maxTokens: 50,
-    });
+        maxTokens: 50,
+      });
+    } catch (error: unknown) {
+      if (error instanceof AIProviderError) {
+        throw error;
+      }
+
+      throw new AIUseCaseError('Classification use case failed', 'classification', error);
+    }
   }
 }
