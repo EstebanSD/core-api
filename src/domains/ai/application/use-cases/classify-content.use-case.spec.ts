@@ -10,7 +10,7 @@ describe('ClassifyContentUseCase', () => {
 
   beforeEach(() => {
     const { provider, mockGenerateText: mock } = createMockAIProvider({
-      result: 'Mocked Classify',
+      text: 'Mocked Classify',
     });
 
     mockGenerateText = mock;
@@ -31,17 +31,17 @@ describe('ClassifyContentUseCase', () => {
 
     const callArgs = mockGenerateText.mock.calls[0][0];
     expect(callArgs.maxTokens).toBe(50);
-    expect(callArgs.content).toContain('sports, technology, finance');
-    expect(callArgs.content).toContain(content);
+    expect(callArgs.prompt).toContain('sports, technology, finance');
+    expect(callArgs.prompt).toContain(content);
 
     expect(mockGenerateText).toHaveBeenCalledWith(
       expect.objectContaining({
-        content: expect.stringContaining(content) as string,
+        prompt: expect.stringContaining(content) as string,
       }),
     );
 
     expect(result).toEqual({
-      result: 'Mocked Classify',
+      text: 'Mocked Classify',
       provider: 'mock',
       model: 'mock-model',
     });
@@ -52,12 +52,12 @@ describe('ClassifyContentUseCase', () => {
 
     const callArgs = mockGenerateText.mock.calls[0][0];
 
-    expect(callArgs.content).toContain('Classify the following content');
+    expect(callArgs.prompt).toContain('Classify the following content');
   });
 
   it('should propagate provider errors', async () => {
     const { provider, mockGenerateText } = createMockAIProvider();
-    const error = new AIProviderError('Provider request failed', 'classification', 'mock');
+    const error = new AIProviderError('Provider request failed', 'mock');
     mockGenerateText.mockRejectedValueOnce(error);
 
     const useCase = new ClassifyContentUseCase(provider);
@@ -65,7 +65,7 @@ describe('ClassifyContentUseCase', () => {
     await expect(useCase.execute('content', ['a'])).rejects.toBeInstanceOf(AIProviderError);
     await useCase.execute('content', ['a']).catch((err: AIProviderError) => {
       expect(err.message).toBe('Provider request failed');
-      expect(err.task).toBe('classification');
+      expect(err.provider).toBe('mock');
       expect(err.cause).toBeDefined();
     });
   });

@@ -12,17 +12,18 @@ export class ClassifyContentUseCase {
   ) {}
 
   async execute(content: string, categories: string[]) {
-    try {
-      return await this.provider.generateText({
-        task: 'classification',
-        content: `
+    const prompt = `
         Classify the following content into one of these categories:
         ${categories.join(', ')}
 
         Return only the category name.
 
         ${content}
-      `,
+      `;
+
+    try {
+      return await this.provider.generateText({
+        prompt,
         maxTokens: 50,
       });
     } catch (error: unknown) {

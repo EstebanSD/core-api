@@ -12,19 +12,19 @@ export class GenerateSeoMetaUseCase {
   ) {}
 
   async execute(content: string) {
+    const prompt = `
+    Generate SEO metadata for the following content.
+    Return:        
+      - Meta title (max 60 characters)
+      - Meta description (max 160 characters)
+      - 5 SEO keywords        
+      
+      ${content}
+      `;
+
     try {
       return await this.provider.generateText({
-        task: 'seo-meta',
-        content: `
-        Generate SEO metadata for the following content.
-
-        Return:
-        - Meta title (max 60 characters)
-        - Meta description (max 160 characters)
-        - 5 SEO keywords
-
-        ${content}
-      `,
+        prompt,
         maxTokens: 200,
       });
     } catch (error: unknown) {

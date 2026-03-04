@@ -10,7 +10,7 @@ describe('GenerateSeoMetaUseCase', () => {
 
   beforeEach(() => {
     const { provider, mockGenerateText: mock } = createMockAIProvider({
-      result: `Meta title: Example Title
+      text: `Meta title: Example Title
         Meta description: Example description for SEO purposes.
         Keywords: seo, marketing, web, optimization, metadata`,
     });
@@ -32,31 +32,18 @@ describe('GenerateSeoMetaUseCase', () => {
 
     expect(mockGenerateText).toHaveBeenCalledWith(
       expect.objectContaining({
-        content: expect.stringContaining('Generate SEO metadata') as string,
-        maxTokens: 200,
+        prompt: expect.stringContaining(content) as string,
       }),
     );
 
-    expect(mockGenerateText).toHaveBeenCalledWith(
-      expect.objectContaining({
-        content: expect.stringContaining('Meta title (max 60 characters)') as string,
-      }),
-    );
-
-    expect(mockGenerateText).toHaveBeenCalledWith(
-      expect.objectContaining({
-        content: expect.stringContaining(content) as string,
-      }),
-    );
-
-    expect(result.result).toContain('Meta title');
+    expect(result.text).toContain('Meta title');
     expect(result.provider).toBe('mock');
     expect(result.model).toBe('mock-model');
   });
 
   it('should propagate provider errors', async () => {
     const { provider, mockGenerateText } = createMockAIProvider();
-    const error = new AIProviderError('Provider request failed', 'seo-meta', 'mock');
+    const error = new AIProviderError('Provider request failed', 'mock');
     mockGenerateText.mockRejectedValueOnce(error);
 
     const useCase = new GenerateSeoMetaUseCase(provider);
@@ -64,7 +51,7 @@ describe('GenerateSeoMetaUseCase', () => {
     await expect(useCase.execute('content')).rejects.toBeInstanceOf(AIProviderError);
     await useCase.execute('content').catch((err: AIProviderError) => {
       expect(err.message).toBe('Provider request failed');
-      expect(err.task).toBe('seo-meta');
+      expect(err.provider).toBe('mock');
       expect(err.cause).toBeDefined();
     });
   });

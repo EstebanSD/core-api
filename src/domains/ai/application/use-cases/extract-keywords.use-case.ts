@@ -12,15 +12,16 @@ export class ExtractKeywordsUseCase {
   ) {}
 
   async execute(content: string, limit = 10) {
-    try {
-      return await this.provider.generateText({
-        task: 'keywords',
-        content: `
+    const prompt = `
         Extract the ${limit} most relevant keywords from the following text.
         Return them as a comma-separated list.
 
         ${content}
-      `,
+      `;
+
+    try {
+      return await this.provider.generateText({
+        prompt,
         maxTokens: 150,
       });
     } catch (error: unknown) {

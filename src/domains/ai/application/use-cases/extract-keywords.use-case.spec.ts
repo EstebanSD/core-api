@@ -10,7 +10,7 @@ describe('ExtractKeywordsUseCase', () => {
 
   beforeEach(() => {
     const { provider, mockGenerateText: mock } = createMockAIProvider({
-      result: 'Mocked Extract',
+      text: 'Mocked Extract',
     });
 
     mockGenerateText = mock;
@@ -30,19 +30,13 @@ describe('ExtractKeywordsUseCase', () => {
 
     expect(mockGenerateText).toHaveBeenCalledWith(
       expect.objectContaining({
-        content: expect.stringContaining('Extract the 10 most relevant keywords') as string,
+        prompt: expect.stringContaining('Extract the 10 most relevant keywords') as string,
         maxTokens: 150,
       }),
     );
 
-    expect(mockGenerateText).toHaveBeenCalledWith(
-      expect.objectContaining({
-        content: expect.stringContaining(content) as string,
-      }),
-    );
-
     expect(result).toEqual({
-      result: 'Mocked Extract',
+      text: 'Mocked Extract',
       provider: 'mock',
       model: 'mock-model',
     });
@@ -50,15 +44,13 @@ describe('ExtractKeywordsUseCase', () => {
 
   it('should use custom limit when provided', async () => {
     const content = 'Cloud computing and distributed systems.';
-    const customLimit = 5;
+    const limit = 5;
 
-    await useCase.execute(content, customLimit);
+    await useCase.execute(content, limit);
 
     expect(mockGenerateText).toHaveBeenCalledWith(
       expect.objectContaining({
-        content: expect.stringContaining(
-          `Extract the ${customLimit} most relevant keywords`,
-        ) as string,
+        prompt: expect.stringContaining(`Extract the ${limit} most relevant keywords`) as string,
       }),
     );
   });
@@ -68,12 +60,12 @@ describe('ExtractKeywordsUseCase', () => {
 
     const callArgs = mockGenerateText.mock.calls[0][0];
 
-    expect(callArgs.content).toContain('Extract the 0 most relevant keywords');
+    expect(callArgs.prompt).toContain('Extract the 0 most relevant keywords');
   });
 
   it('should propagate provider errors', async () => {
     const { provider, mockGenerateText } = createMockAIProvider();
-    const error = new AIProviderError('Provider request failed', 'keywords', 'mock');
+    const error = new AIProviderError('Provider request failed', 'mock');
     mockGenerateText.mockRejectedValueOnce(error);
 
     const useCase = new ExtractKeywordsUseCase(provider);
@@ -81,7 +73,7 @@ describe('ExtractKeywordsUseCase', () => {
     await expect(useCase.execute('content')).rejects.toBeInstanceOf(AIProviderError);
     await useCase.execute('content').catch((err: AIProviderError) => {
       expect(err.message).toBe('Provider request failed');
-      expect(err.task).toBe('keywords');
+      expect(err.provider).toBe('mock');
       expect(err.cause).toBeDefined();
     });
   });

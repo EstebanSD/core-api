@@ -10,7 +10,7 @@ describe('GenerateSummaryUseCase', () => {
 
   beforeEach(() => {
     const { provider, mockGenerateText: mock } = createMockAIProvider({
-      result: 'Mocked Summary',
+      text: 'Mocked Summary',
     });
 
     mockGenerateText = mock;
@@ -26,17 +26,17 @@ describe('GenerateSummaryUseCase', () => {
 
     expect(mockGenerateText).toHaveBeenCalledWith(
       expect.objectContaining({
-        content: expect.stringContaining(inputContent) as string,
+        prompt: expect.stringContaining(inputContent) as string,
         maxTokens: 300,
       }),
     );
 
-    expect(result.result).toBe('Mocked Summary');
+    expect(result.text).toBe('Mocked Summary');
   });
 
   it('should propagate provider errors', async () => {
     const { provider, mockGenerateText } = createMockAIProvider();
-    const error = new AIProviderError('Provider request failed', 'summary', 'mock');
+    const error = new AIProviderError('Provider request failed', 'mock');
     mockGenerateText.mockRejectedValueOnce(error);
 
     const useCase = new GenerateSummaryUseCase(provider);
@@ -44,7 +44,7 @@ describe('GenerateSummaryUseCase', () => {
     await expect(useCase.execute('content')).rejects.toBeInstanceOf(AIProviderError);
     await useCase.execute('content').catch((err: AIProviderError) => {
       expect(err.message).toBe('Provider request failed');
-      expect(err.task).toBe('summary');
+      expect(err.provider).toBe('mock');
       expect(err.cause).toBeDefined();
     });
   });

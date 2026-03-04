@@ -5,7 +5,7 @@ export function createMockAIProvider(response: Partial<AIResponse> = {}) {
   const mockGenerateText: jest.MockedFunction<AIProvider['generateText']> = jest
     .fn()
     .mockResolvedValue({
-      result: 'mock-text',
+      text: 'mock-text',
       provider: 'mock',
       model: 'mock-model',
       ...response,

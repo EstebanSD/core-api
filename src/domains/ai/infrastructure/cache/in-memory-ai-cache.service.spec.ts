@@ -5,11 +5,11 @@ describe('InMemoryAICacheService', () => {
   let cache: InMemoryAICacheService;
 
   const mockResponse: AIResponse = {
-    result: 'test result',
+    text: 'test result',
     provider: 'ollama',
     model: 'test-model',
-    usage: 10,
-    latencyMs: 5,
+    // usage: 10, TODO
+    // latencyMs: 5, TODO
   };
 
   beforeEach(() => {

@@ -1,22 +1,15 @@
 import { AIProvider } from 'src/domains/ai/domain/ai-provider.interface';
-import { PromptInput } from 'src/domains/ai/domain/prompt-input';
-import { AIResponse } from 'src/domains/ai/domain/ai-response';
-import { MockPromptBuilder } from './mock.prompt-builder';
+import type { AITextRequest } from 'src/domains/ai/domain/prompt-input';
+import type { AIResponse } from 'src/domains/ai/domain/ai-response';
 
 export class MockProvider implements AIProvider {
-  private readonly promptBuilder = new MockPromptBuilder();
-
   // eslint-disable-next-line @typescript-eslint/require-await
-  async generateText(input: PromptInput): Promise<AIResponse> {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const prompt = this.promptBuilder.build(input);
-
+  async generateText(input: AITextRequest): Promise<AIResponse> {
     return {
-      result: `Mock response for task "${input.task}"`,
+      text: `Mock response for task "${input.prompt}"`,
       provider: 'mock',
       model: 'mock-model',
-      usage: 42,
-      latencyMs: 5,
+      usage: { inputTokens: 40, outputTokens: 40, totalTokens: 80 },
     };
   }
 }

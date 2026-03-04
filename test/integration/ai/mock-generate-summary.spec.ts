@@ -25,6 +25,6 @@ describe('AiModule Integration', () => {
     const result = await summaryUseCase.execute('Test content');
 
     expect(result.provider).toBe('mock');
-    expect(result.result).toContain('Mock');
+    expect(result.text).toContain('Mock');
   });
 });

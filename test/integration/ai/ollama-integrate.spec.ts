@@ -1,6 +1,7 @@
 import { AppConfigService } from 'src/config';
 import { CustomLoggerService } from 'src/common/logger/custom-logger.service';
 import { AIMetricsService } from 'src/domains/ai/infrastructure/metrics/ai-metrics.service';
+import { InMemoryAICacheService } from 'src/domains/ai/infrastructure/cache/in-memory-ai-cache.service';
 import { OllamaProvider } from 'src/domains/ai/infrastructure/providers/ollama';
 import type { PromptInput } from 'src/domains/ai/domain/prompt-input';
 
@@ -15,7 +16,12 @@ describe('OllamaProvider (integration)', () => {
       ollamaBaseUrl: 'http://localhost:11434/v1',
     } as unknown as AppConfigService;
 
-    provider = new OllamaProvider(config, new CustomLoggerService(), new AIMetricsService());
+    provider = new OllamaProvider(
+      config,
+      new CustomLoggerService(),
+      new AIMetricsService(),
+      new InMemoryAICacheService(),
+    );
   });
 
   beforeAll(async () => {
@@ -32,7 +38,7 @@ describe('OllamaProvider (integration)', () => {
     });
 
     expect(response).toBeDefined();
-    expect(response.result).toBeTruthy();
+    expect(response.text).toBeTruthy();
     expect(response.provider).toBe('ollama');
     expect(response.model).toBe('llama3');
   }, 20000);
@@ -46,6 +52,6 @@ describe('OllamaProvider (integration)', () => {
     const first = await provider.generateText(input);
     const second = await provider.generateText(input);
 
-    expect(second.result).toBe(first.result);
+    expect(second.text).toBe(first.text);
   });
 });

@@ -3,18 +3,16 @@ import OpenAI from 'openai';
 import { AppConfigService } from 'src/config';
 import { CustomLoggerService } from 'src/common/logger/custom-logger.service';
 import { AIProvider } from 'src/domains/ai/domain/ai-provider.interface';
-import type { PromptInput } from 'src/domains/ai/domain/prompt-input';
+import type { AITextRequest } from 'src/domains/ai/domain/prompt-input';
 import type { AIResponse } from 'src/domains/ai/domain/ai-response';
 import { AIProviderError } from 'src/domains/ai/domain/errors/ai-provider.error';
 import { AIMetricsService } from '../../metrics/ai-metrics.service';
-import { OllamaPromptBuilder } from './ollama.prompt-builder';
 import { InMemoryAICacheService } from '../../cache/in-memory-ai-cache.service';
 
 @Injectable()
 export class OllamaProvider implements AIProvider {
   private readonly client: OpenAI;
   private readonly model: string;
-  private readonly promptBuilder = new OllamaPromptBuilder();
 
   constructor(
     private readonly configService: AppConfigService,
@@ -32,56 +30,56 @@ export class OllamaProvider implements AIProvider {
     });
   }
 
-  async generateText(input: PromptInput): Promise<AIResponse> {
+  async generateText(input: AITextRequest): Promise<AIResponse> {
     const cacheKey = this.buildCacheKey(input);
     const cached = this.cache.get(cacheKey);
 
     if (cached) {
-      this.metrics.recordCacheHit(input.task);
+      this.metrics.recordCacheHit('ollama-request');
       return cached;
     }
 
-    this.metrics.recordRequest(input.task);
+    this.metrics.recordRequest('ollama-request');
 
-    const prompt = this.promptBuilder.build(input);
     const start = performance.now();
 
     try {
       const completion = await this.client.chat.completions.create({
         model: this.model,
-        messages: [{ role: 'user', content: prompt }],
+        messages: [{ role: 'user', content: input.prompt }],
         max_tokens: input.maxTokens ?? 256,
       });
 
       const latencyMs = performance.now() - start;
 
       const result: AIResponse = {
-        result: completion.choices[0].message.content ?? '',
+        text: completion.choices[0].message.content ?? '',
         provider: 'ollama',
         model: this.model,
-        usage: completion.usage?.total_tokens,
-        latencyMs,
+        usage: {
+          inputTokens: completion.usage?.prompt_tokens || 0,
+          outputTokens: completion.usage?.completion_tokens || 0,
+          totalTokens: completion.usage?.total_tokens || 0,
+        },
       };
 
       this.cache.set(cacheKey, result, 60_000);
 
-      this.metrics.recordLatency(input.task, latencyMs);
+      this.metrics.recordLatency('ollama-request', latencyMs);
 
       return result;
     } catch (error: unknown) {
-      this.logger.error(`AI request generate text failed | task=${input.task}`, error);
-      this.metrics.recordError(input.task);
+      this.logger.error('AI request generate text failed', error);
+      this.metrics.recordError('ollama-request');
 
-      throw new AIProviderError('Failed to generate text', input.task, 'ollama', error);
+      throw new AIProviderError('Failed to generate text', 'ollama', error);
     }
   }
 
-  private buildCacheKey(input: PromptInput): string {
+  private buildCacheKey(input: AITextRequest): string {
     return JSON.stringify({
-      task: input.task,
-      content: input.content,
+      content: input.prompt,
       maxTokens: input.maxTokens,
-      metadata: input.metadata,
       model: this.model,
     });
   }
