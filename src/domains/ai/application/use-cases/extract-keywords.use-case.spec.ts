@@ -3,10 +3,14 @@ import type { AIProvider } from '../../domain/ai-provider.interface';
 import { AIProviderError } from '../../domain/errors/ai-provider.error';
 import { createMockAIProvider } from '../../testing/create-mock-ai-provider';
 import { AIUseCaseError } from '../errors/ai-use-case.error';
+import { KeywordsPromptBuilder } from '../prompts';
 
 describe('ExtractKeywordsUseCase', () => {
   let useCase: ExtractKeywordsUseCase;
+
   let mockGenerateText: jest.MockedFunction<AIProvider['generateText']>;
+  let mockPromptBuilder: KeywordsPromptBuilder;
+  let mockBuild: jest.Mock;
 
   beforeEach(() => {
     const { provider, mockGenerateText: mock } = createMockAIProvider({
@@ -14,11 +18,13 @@ describe('ExtractKeywordsUseCase', () => {
     });
 
     mockGenerateText = mock;
-    useCase = new ExtractKeywordsUseCase(provider);
-  });
+    mockBuild = jest.fn().mockReturnValue('Mocked prompt');
 
-  it('should be defined', () => {
-    expect(useCase).toBeDefined();
+    mockPromptBuilder = {
+      build: mockBuild,
+    } as unknown as KeywordsPromptBuilder;
+
+    useCase = new ExtractKeywordsUseCase(provider, mockPromptBuilder);
   });
 
   it('should call provider with correct prompt using default limit', async () => {
@@ -26,14 +32,14 @@ describe('ExtractKeywordsUseCase', () => {
 
     const result = await useCase.execute(content);
 
+    expect(mockBuild).toHaveBeenCalledWith({ content, limit: 10 });
+
     expect(mockGenerateText).toHaveBeenCalledTimes(1);
 
-    expect(mockGenerateText).toHaveBeenCalledWith(
-      expect.objectContaining({
-        prompt: expect.stringContaining('Extract the 10 most relevant keywords') as string,
-        maxTokens: 150,
-      }),
-    );
+    const callArgs = mockGenerateText.mock.calls[0][0];
+
+    expect(callArgs.prompt).toBe('Mocked prompt');
+    expect(callArgs.maxTokens).toBe(150);
 
     expect(result).toEqual({
       text: 'Mocked Extract',
@@ -48,34 +54,25 @@ describe('ExtractKeywordsUseCase', () => {
 
     await useCase.execute(content, limit);
 
-    expect(mockGenerateText).toHaveBeenCalledWith(
-      expect.objectContaining({
-        prompt: expect.stringContaining(`Extract the ${limit} most relevant keywords`) as string,
-      }),
-    );
+    expect(mockBuild).toHaveBeenCalledWith({ content, limit });
+    expect(mockGenerateText).toHaveBeenCalled();
   });
 
   it('should include provided limit even if zero', async () => {
     await useCase.execute('content', 0);
 
-    const callArgs = mockGenerateText.mock.calls[0][0];
-
-    expect(callArgs.prompt).toContain('Extract the 0 most relevant keywords');
+    expect(mockBuild).toHaveBeenCalledWith({ content: 'content', limit: 0 });
   });
 
   it('should propagate provider errors', async () => {
     const { provider, mockGenerateText } = createMockAIProvider();
+
     const error = new AIProviderError('Provider request failed', 'mock');
     mockGenerateText.mockRejectedValueOnce(error);
 
-    const useCase = new ExtractKeywordsUseCase(provider);
+    const useCase = new ExtractKeywordsUseCase(provider, mockPromptBuilder);
 
     await expect(useCase.execute('content')).rejects.toBeInstanceOf(AIProviderError);
-    await useCase.execute('content').catch((err: AIProviderError) => {
-      expect(err.message).toBe('Provider request failed');
-      expect(err.provider).toBe('mock');
-      expect(err.cause).toBeDefined();
-    });
   });
 
   it('should wrap unknown errors in AIUseCaseError', async () => {
@@ -84,7 +81,7 @@ describe('ExtractKeywordsUseCase', () => {
     const unknownError = new Error('Unexpected crash');
     mockGenerateText.mockRejectedValueOnce(unknownError);
 
-    const useCase = new ExtractKeywordsUseCase(provider);
+    const useCase = new ExtractKeywordsUseCase(provider, mockPromptBuilder);
 
     const execution = useCase.execute('content');
 

@@ -10,7 +10,6 @@ import {
   GenerateSummaryUseCase,
 } from './application/use-cases';
 import { AiController } from './ai.controller';
-import { AIMetricsController } from './ai-metrics.controller';
 
 @Module({
   imports: [AppConfigModule],
@@ -28,7 +27,7 @@ import { AIMetricsController } from './ai-metrics.controller';
     // Provider binding
     AIProviderBinding,
   ],
-  controllers: [AiController, AIMetricsController],
+  controllers: [AiController],
   exports: [
     ClassifyContentUseCase,
     ExtractKeywordsUseCase,

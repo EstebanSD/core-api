@@ -1,8 +1,8 @@
 import { AIProvider } from '../../domain/ai-provider.interface';
 import { InMemoryAICacheService } from '../cache/in-memory-ai-cache.service';
 import { AIMetricsService } from '../metrics/ai-metrics.service';
-import { CacheAIProvider } from './cache-ai.provider';
-import { MetricsAIProvider } from './metrics-ai.provider';
+import { CacheAIProvider } from './cache.provider';
+import { MetricsAIProvider } from './metrics.provider';
 
 export class AIProviderPipelineBuilder {
   constructor(private provider: AIProvider) {}

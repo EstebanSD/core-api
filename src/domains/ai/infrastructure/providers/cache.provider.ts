@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { createHash } from 'crypto';
 import { AIProvider } from '../../domain/ai-provider.interface';
 import { InMemoryAICacheService } from '../cache/in-memory-ai-cache.service';
 import { AIMetricsService } from '../metrics/ai-metrics.service';
@@ -7,6 +8,8 @@ import type { AIResponse } from '../../domain/ai-response';
 
 @Injectable()
 export class CacheAIProvider implements AIProvider {
+  private static readonly DEFAULT_TTL = 60000;
+
   constructor(
     private readonly provider: AIProvider,
     private readonly cache: InMemoryAICacheService,
@@ -14,7 +17,7 @@ export class CacheAIProvider implements AIProvider {
   ) {}
 
   async generateText(input: AITextRequest): Promise<AIResponse> {
-    const key = JSON.stringify(input);
+    const key = this.buildCacheKey(input);
 
     const cached = this.cache.get(key);
 
@@ -25,8 +28,19 @@ export class CacheAIProvider implements AIProvider {
 
     const result = await this.provider.generateText(input);
 
-    this.cache.set(key, result, 60000);
+    this.cache.set(key, result, CacheAIProvider.DEFAULT_TTL);
 
     return result;
+  }
+
+  private buildCacheKey(input: AITextRequest): string {
+    const raw = [
+      input.metadata?.operation ?? 'unknown',
+      input.prompt.slice(0, 2000),
+      input.maxTokens ?? '',
+      input.temperature ?? '',
+    ].join('|');
+
+    return createHash('sha256').update(raw).digest('hex');
   }
 }

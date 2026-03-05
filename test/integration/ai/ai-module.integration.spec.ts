@@ -4,8 +4,8 @@ import { CustomLoggerModule } from 'src/common/logger/custom-logger.module';
 import { AiModule } from 'src/domains/ai/ai.module';
 import { GenerateSummaryUseCase } from 'src/domains/ai/application/use-cases';
 import { AI_PROVIDER } from 'src/domains/ai/domain/ai.tokens';
-import { CacheAIProvider } from 'src/domains/ai/infrastructure/providers/cache-ai.provider';
-import { MetricsAIProvider } from 'src/domains/ai/infrastructure/providers/metrics-ai.provider';
+import { CacheAIProvider } from 'src/domains/ai/infrastructure/providers/cache.provider';
+import { MetricsAIProvider } from 'src/domains/ai/infrastructure/providers/metrics.provider';
 import { MockProvider } from 'src/domains/ai/infrastructure/providers/mock.provider';
 
 describe('AiModule Integration', () => {
@@ -33,12 +33,12 @@ describe('AiModule Integration', () => {
   it('should wire AI provider pipeline correctly', () => {
     const provider = module.get(AI_PROVIDER);
 
-    expect(provider).toBeInstanceOf(MetricsAIProvider);
+    expect(provider).toBeInstanceOf(CacheAIProvider);
 
-    const metricsProvider = (provider as MetricsAIProvider)['provider'];
-    expect(metricsProvider).toBeInstanceOf(CacheAIProvider);
+    const metricsProvider = (provider as CacheAIProvider)['provider'];
+    expect(metricsProvider).toBeInstanceOf(MetricsAIProvider);
 
-    const baseProvider = (metricsProvider as CacheAIProvider)['provider'];
+    const baseProvider = (metricsProvider as MetricsAIProvider)['provider'];
     expect(baseProvider).toBeInstanceOf(MockProvider);
   });
 

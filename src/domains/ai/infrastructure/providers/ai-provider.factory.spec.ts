@@ -5,8 +5,8 @@ import { AppConfigService } from 'src/config';
 import { CustomLoggerService } from 'src/common/logger/custom-logger.service';
 import { AIMetricsService } from '../metrics/ai-metrics.service';
 import { InMemoryAICacheService } from '../cache/in-memory-ai-cache.service';
-import { MetricsAIProvider } from './metrics-ai.provider';
-import { CacheAIProvider } from './cache-ai.provider';
+import { MetricsAIProvider } from './metrics.provider';
+import { CacheAIProvider } from './cache.provider';
 import { OllamaProvider } from './ollama.provider';
 import { MockProvider } from './mock.provider';
 
@@ -40,10 +40,10 @@ describe('AIProviderFactory', () => {
 
     const provider = AIProviderFactory.create(config as AppConfigService, logger, metrics, cache);
 
-    expect(provider).toBeInstanceOf(MetricsAIProvider);
+    expect(provider).toBeInstanceOf(CacheAIProvider);
 
     const cacheProvider = (provider as any).provider;
-    expect(cacheProvider).toBeInstanceOf(CacheAIProvider);
+    expect(cacheProvider).toBeInstanceOf(MetricsAIProvider);
 
     const baseProvider = cacheProvider.provider;
     expect(baseProvider).toBeInstanceOf(OllamaProvider);
@@ -54,7 +54,7 @@ describe('AIProviderFactory', () => {
 
     const provider = AIProviderFactory.create(config as AppConfigService, logger, metrics, cache);
 
-    expect(provider).toBeInstanceOf(MetricsAIProvider);
+    expect(provider).toBeInstanceOf(CacheAIProvider);
 
     const cacheProvider = (provider as any).provider;
     const baseProvider = cacheProvider.provider;
