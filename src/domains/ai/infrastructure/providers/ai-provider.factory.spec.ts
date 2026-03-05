@@ -1,10 +1,14 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { AIProviderFactory } from './ai-provider.factory';
 import { AppConfigService } from 'src/config';
 import { CustomLoggerService } from 'src/common/logger/custom-logger.service';
 import { AIMetricsService } from '../metrics/ai-metrics.service';
 import { InMemoryAICacheService } from '../cache/in-memory-ai-cache.service';
-import { OllamaProvider } from './ollama';
-import { MockProvider } from './mock';
+import { MetricsAIProvider } from './metrics-ai.provider';
+import { CacheAIProvider } from './cache-ai.provider';
+import { OllamaProvider } from './ollama.provider';
+import { MockProvider } from './mock.provider';
 
 describe('AIProviderFactory', () => {
   let config: Partial<AppConfigService>;
@@ -31,20 +35,31 @@ describe('AIProviderFactory', () => {
     cache = new InMemoryAICacheService();
   });
 
-  it('should create OllamaProvider when aiProvider is "ollama"', () => {
+  it('should create pipeline with OllamaProvider', () => {
     Object.assign(config, { aiProvider: 'ollama' });
 
     const provider = AIProviderFactory.create(config as AppConfigService, logger, metrics, cache);
 
-    expect(provider).toBeInstanceOf(OllamaProvider);
+    expect(provider).toBeInstanceOf(MetricsAIProvider);
+
+    const cacheProvider = (provider as any).provider;
+    expect(cacheProvider).toBeInstanceOf(CacheAIProvider);
+
+    const baseProvider = cacheProvider.provider;
+    expect(baseProvider).toBeInstanceOf(OllamaProvider);
   });
 
-  it('should create MockProvider when aiProvider is "mock"', () => {
+  it('should create pipeline with MockProvider', () => {
     Object.assign(config, { aiProvider: 'mock' });
 
     const provider = AIProviderFactory.create(config as AppConfigService, logger, metrics, cache);
 
-    expect(provider).toBeInstanceOf(MockProvider);
+    expect(provider).toBeInstanceOf(MetricsAIProvider);
+
+    const cacheProvider = (provider as any).provider;
+    const baseProvider = cacheProvider.provider;
+
+    expect(baseProvider).toBeInstanceOf(MockProvider);
   });
 
   it('should throw error for unsupported provider', () => {

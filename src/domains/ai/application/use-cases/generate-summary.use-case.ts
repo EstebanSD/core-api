@@ -22,6 +22,9 @@ export class GenerateSummaryUseCase {
       return await this.provider.generateText({
         prompt,
         maxTokens: 300,
+        metadata: {
+          operation: 'summary',
+        },
       });
     } catch (error: unknown) {
       if (error instanceof AIProviderError) {

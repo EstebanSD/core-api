@@ -25,6 +25,9 @@ export class ClassifyContentUseCase {
       return await this.provider.generateText({
         prompt,
         maxTokens: 50,
+        metadata: {
+          operation: 'classification',
+        },
       });
     } catch (error: unknown) {
       if (error instanceof AIProviderError) {

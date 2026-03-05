@@ -26,6 +26,9 @@ export class GenerateSeoMetaUseCase {
       return await this.provider.generateText({
         prompt,
         maxTokens: 200,
+        metadata: {
+          operation: 'seo-meta',
+        },
       });
     } catch (error: unknown) {
       if (error instanceof AIProviderError) {

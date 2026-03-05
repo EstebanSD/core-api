@@ -23,6 +23,9 @@ export class ExtractKeywordsUseCase {
       return await this.provider.generateText({
         prompt,
         maxTokens: 150,
+        metadata: {
+          operation: 'keywords',
+        },
       });
     } catch (error: unknown) {
       if (error instanceof AIProviderError) {

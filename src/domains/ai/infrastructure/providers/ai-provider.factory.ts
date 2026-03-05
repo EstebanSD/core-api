@@ -2,9 +2,10 @@ import { AppConfigService } from 'src/config';
 import { CustomLoggerService } from 'src/common/logger/custom-logger.service';
 import type { AIProvider } from '../../domain/ai-provider.interface';
 import { AIMetricsService } from '../metrics/ai-metrics.service';
-import { OllamaProvider } from './ollama';
-import { MockProvider } from './mock';
 import { InMemoryAICacheService } from '../cache/in-memory-ai-cache.service';
+import { OllamaProvider } from './ollama.provider';
+import { MockProvider } from './mock.provider';
+import { AIProviderPipelineBuilder } from './ai-provider.pipeline';
 
 export class AIProviderFactory {
   static create(
@@ -14,16 +15,26 @@ export class AIProviderFactory {
     cache: InMemoryAICacheService,
   ): AIProvider {
     const providerType = config.aiProvider;
+    let baseProvider: AIProvider;
 
     switch (providerType) {
-      case 'ollama':
-        return new OllamaProvider(config, logger, metrics, cache);
+      case 'ollama': {
+        baseProvider = new OllamaProvider(config, logger);
+        break;
+      }
 
-      case 'mock':
-        return new MockProvider();
+      case 'mock': {
+        baseProvider = new MockProvider();
+        break;
+      }
 
       default:
         throw new Error(`Unsupported AI provider: ${providerType}`);
     }
+
+    return new AIProviderPipelineBuilder(baseProvider)
+      .withMetrics(metrics)
+      .withCache(cache, metrics)
+      .build();
   }
 }
