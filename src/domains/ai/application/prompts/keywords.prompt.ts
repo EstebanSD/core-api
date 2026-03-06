@@ -9,9 +9,8 @@ type KeywordsPromptType = {
 @Injectable()
 export class KeywordsPromptBuilder implements PromptBuilder<KeywordsPromptType> {
   build({ content, limit }: KeywordsPromptType): string {
-    return `Extract the ${limit} most relevant keywords from the following text.
-    Return them as a comma-separated list.
-    ${content}
-    `;
+    return `Extract ${limit} keywords.
+    Text: ${content}
+    Keywords (comma-separated):`;
   }
 }

@@ -8,8 +8,8 @@ type SummaryPromptType = {
 @Injectable()
 export class SummaryPromptBuilder implements PromptBuilder<SummaryPromptType> {
   build({ content }: SummaryPromptType): string {
-    return `Summarize the following content in 5 concise bullet points:
-    ${content}
-    `;
+    return `Text: ${content}
+    
+    Summary (5 bullet points):`;
   }
 }

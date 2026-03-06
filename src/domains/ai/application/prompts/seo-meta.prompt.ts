@@ -8,13 +8,11 @@ type SeoMetaPromptType = {
 @Injectable()
 export class SeoMetaPromptBuilder implements PromptBuilder<SeoMetaPromptType> {
   build({ content }: SeoMetaPromptType): string {
-    return `Generate SEO metadata for the following content.
-    Return:
-        - Meta title (max 60 characters)
-        - Meta description (max 160 characters)
-        - 5 SEO keywords        
-    
-        ${content}
-    `;
+    return `SEO metadata:
+    - title (≤60)
+    - description (≤160)
+    - 5 keywords (comma-separated)
+
+    Text: ${content}`;
   }
 }

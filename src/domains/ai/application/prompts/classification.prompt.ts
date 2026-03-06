@@ -9,9 +9,8 @@ type ClassificationPromptType = {
 @Injectable()
 export class ClassificationPromptBuilder implements PromptBuilder<ClassificationPromptType> {
   build({ content, categories }: ClassificationPromptType): string {
-    return `Classify the following content into one of these categories: ${categories.join(', ')}
-    Return only the category name.
-    ${content}
-    `;
+    return `Categories: ${categories.join(', ')}
+    Text: ${content}
+    Category:`;
   }
 }
