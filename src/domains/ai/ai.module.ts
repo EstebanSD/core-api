@@ -3,7 +3,7 @@ import { AppConfigModule } from 'src/config';
 import { AIMetricsService } from './infrastructure/metrics/ai-metrics.service';
 import { InMemoryAICacheService } from './infrastructure/cache/in-memory-ai-cache.service';
 import { AIProviderBinding } from './infrastructure/providers/ai-provider.binding';
-import { AiController } from './interface/controllers/ai.controller';
+import { AiController } from './adapters/controllers/ai.controller';
 import {
   ClassificationPromptBuilder,
   KeywordsPromptBuilder,
