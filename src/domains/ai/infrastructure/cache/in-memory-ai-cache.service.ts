@@ -1,8 +1,8 @@
 import { Injectable, Scope } from '@nestjs/common';
-import type { AIResponse } from '../../domain/ai-response';
+import type { AITextResponse } from '../../domain/ai-response';
 
 interface CacheEntry {
-  value: AIResponse;
+  value: AITextResponse;
   expiresAt: number;
 }
 
@@ -10,7 +10,7 @@ interface CacheEntry {
 export class InMemoryAICacheService {
   private readonly store = new Map<string, CacheEntry>();
 
-  get(key: string): AIResponse | undefined {
+  get(key: string): AITextResponse | undefined {
     const entry = this.store.get(key);
 
     if (!entry) return undefined;
@@ -23,7 +23,7 @@ export class InMemoryAICacheService {
     return entry.value;
   }
 
-  set(key: string, value: AIResponse, ttlMs: number): void {
+  set(key: string, value: AITextResponse, ttlMs: number): void {
     this.store.set(key, {
       value,
       expiresAt: Date.now() + ttlMs,

@@ -1,19 +1,22 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { AI_PROVIDER } from '../../domain/ai.tokens';
 import type { AIProvider } from '../../domain/ai-provider.interface';
+import type { AITextResponse } from '../../domain/ai-response';
 import { AIProviderError } from '../../domain/errors/ai-provider.error';
 import { AIUseCaseError } from '../errors/ai-use-case.error';
 import { KeywordsPromptBuilder } from '../prompts';
 
 @Injectable()
 export class ExtractKeywordsUseCase {
+  private static readonly OPERATION = 'keywords';
+
   constructor(
     @Inject(AI_PROVIDER)
     private readonly provider: AIProvider,
     private readonly promptBuilder: KeywordsPromptBuilder,
   ) {}
 
-  async execute(content: string, limit = 10) {
+  async execute(content: string, limit = 10): Promise<AITextResponse> {
     const prompt = this.promptBuilder.build({ content, limit });
 
     try {
@@ -22,7 +25,7 @@ export class ExtractKeywordsUseCase {
         maxTokens: 150,
         temperature: 0.2,
         metadata: {
-          operation: 'keywords',
+          operation: ExtractKeywordsUseCase.OPERATION,
         },
       });
     } catch (error: unknown) {
@@ -30,7 +33,11 @@ export class ExtractKeywordsUseCase {
         throw error;
       }
 
-      throw new AIUseCaseError('Extraction keywords use case failed', 'keywords', error);
+      throw new AIUseCaseError(
+        'Extraction keywords use case failed',
+        ExtractKeywordsUseCase.OPERATION,
+        error,
+      );
     }
   }
 }

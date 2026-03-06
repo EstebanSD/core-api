@@ -4,6 +4,12 @@ import { AIMetricsService } from './infrastructure/metrics/ai-metrics.service';
 import { InMemoryAICacheService } from './infrastructure/cache/in-memory-ai-cache.service';
 import { AIProviderBinding } from './infrastructure/providers/ai-provider.binding';
 import {
+  ClassificationPromptBuilder,
+  KeywordsPromptBuilder,
+  SeoMetaPromptBuilder,
+  SummaryPromptBuilder,
+} from './application/prompts';
+import {
   ClassifyContentUseCase,
   ExtractKeywordsUseCase,
   GenerateSeoMetaUseCase,
@@ -17,6 +23,12 @@ import { AiController } from './ai.controller';
     // Infrastructure
     InMemoryAICacheService,
     AIMetricsService,
+
+    // Prompt builders
+    ClassificationPromptBuilder,
+    KeywordsPromptBuilder,
+    SeoMetaPromptBuilder,
+    SummaryPromptBuilder,
 
     // Application (Use Cases)
     ClassifyContentUseCase,

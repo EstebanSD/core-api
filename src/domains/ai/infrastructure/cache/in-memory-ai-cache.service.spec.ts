@@ -1,10 +1,10 @@
 import { InMemoryAICacheService } from './in-memory-ai-cache.service';
-import type { AIResponse } from '../../domain/ai-response';
+import type { AITextResponse } from '../../domain/ai-response';
 
 describe('InMemoryAICacheService', () => {
   let cache: InMemoryAICacheService;
 
-  const mockResponse: AIResponse = {
+  const mockResponse: AITextResponse = {
     text: 'test result',
     provider: 'ollama',
     model: 'test-model',

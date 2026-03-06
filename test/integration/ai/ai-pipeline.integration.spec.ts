@@ -5,8 +5,10 @@ import { InMemoryAICacheService } from 'src/domains/ai/infrastructure/cache/in-m
 import { AIMetricsService } from 'src/domains/ai/infrastructure/metrics/ai-metrics.service';
 import { AIProviderFactory } from 'src/domains/ai/infrastructure/providers/ai-provider.factory';
 
-jest.setTimeout(40000); // TODO .skip() in CI
-describe('AI Provider pipeline (integration)', () => {
+const RUN_TEST = process.env.RUN_AI_TESTS === 'true';
+
+jest.setTimeout(60000); // TODO .skip() in CI
+(RUN_TEST ? describe : describe.skip)('AI Provider pipeline (integration)', () => {
   let provider: AIProvider;
 
   beforeAll(() => {

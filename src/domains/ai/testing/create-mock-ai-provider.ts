@@ -1,7 +1,7 @@
 import type { AIProvider } from '../domain/ai-provider.interface';
-import type { AIResponse } from '../domain/ai-response';
+import type { AITextResponse } from '../domain/ai-response';
 
-export function createMockAIProvider(response: Partial<AIResponse> = {}) {
+export function createMockAIProvider(response: Partial<AITextResponse> = {}) {
   const mockGenerateText: jest.MockedFunction<AIProvider['generateText']> = jest
     .fn()
     .mockResolvedValue({

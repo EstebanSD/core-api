@@ -1,19 +1,22 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { AI_PROVIDER } from '../../domain/ai.tokens';
 import type { AIProvider } from '../../domain/ai-provider.interface';
+import type { AITextResponse } from '../../domain/ai-response';
 import { AIProviderError } from '../../domain/errors/ai-provider.error';
 import { AIUseCaseError } from '../errors/ai-use-case.error';
 import { ClassificationPromptBuilder } from '../prompts';
 
 @Injectable()
 export class ClassifyContentUseCase {
+  private static readonly OPERATION = 'classification';
+
   constructor(
     @Inject(AI_PROVIDER)
     private readonly provider: AIProvider,
     private readonly promptBuilder: ClassificationPromptBuilder,
   ) {}
 
-  async execute(content: string, categories: string[]) {
+  async execute(content: string, categories: string[]): Promise<AITextResponse> {
     const prompt = this.promptBuilder.build({ content, categories });
 
     try {
@@ -22,7 +25,7 @@ export class ClassifyContentUseCase {
         maxTokens: 50,
         temperature: 0,
         metadata: {
-          operation: 'classification',
+          operation: ClassifyContentUseCase.OPERATION,
         },
       });
     } catch (error: unknown) {
@@ -30,7 +33,11 @@ export class ClassifyContentUseCase {
         throw error;
       }
 
-      throw new AIUseCaseError('Classification use case failed', 'classification', error);
+      throw new AIUseCaseError(
+        'Classification use case failed',
+        ClassifyContentUseCase.OPERATION,
+        error,
+      );
     }
   }
 }

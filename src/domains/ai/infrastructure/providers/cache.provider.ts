@@ -4,7 +4,7 @@ import { AIProvider } from '../../domain/ai-provider.interface';
 import { InMemoryAICacheService } from '../cache/in-memory-ai-cache.service';
 import { AIMetricsService } from '../metrics/ai-metrics.service';
 import type { AITextRequest } from '../../domain/prompt-input';
-import type { AIResponse } from '../../domain/ai-response';
+import type { AITextResponse } from '../../domain/ai-response';
 
 @Injectable()
 export class CacheAIProvider implements AIProvider {
@@ -16,7 +16,7 @@ export class CacheAIProvider implements AIProvider {
     private readonly metrics: AIMetricsService,
   ) {}
 
-  async generateText(input: AITextRequest): Promise<AIResponse> {
+  async generateText(input: AITextRequest): Promise<AITextResponse> {
     const key = this.buildCacheKey(input);
 
     const cached = this.cache.get(key);
@@ -31,6 +31,14 @@ export class CacheAIProvider implements AIProvider {
     this.cache.set(key, result, CacheAIProvider.DEFAULT_TTL);
 
     return result;
+  }
+
+  streamText(input: AITextRequest) {
+    if (!this.provider.streamText) {
+      throw new Error('Provider does not support streaming');
+    }
+
+    return this.provider.streamText(input);
   }
 
   private buildCacheKey(input: AITextRequest): string {
