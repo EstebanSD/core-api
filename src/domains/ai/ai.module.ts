@@ -3,6 +3,7 @@ import { AppConfigModule } from 'src/config';
 import { AIMetricsService } from './infrastructure/metrics/ai-metrics.service';
 import { InMemoryAICacheService } from './infrastructure/cache/in-memory-ai-cache.service';
 import { AIProviderBinding } from './infrastructure/providers/ai-provider.binding';
+import { AiController } from './interface/controllers/ai.controller';
 import {
   ClassificationPromptBuilder,
   KeywordsPromptBuilder,
@@ -14,11 +15,25 @@ import {
   ExtractKeywordsUseCase,
   GenerateSeoMetaUseCase,
   GenerateSummaryUseCase,
+  ClassificationStreamUseCase,
+  KeywordsStreamUseCase,
+  SeoMetaStreamUseCase,
+  SummaryStreamUseCase,
 } from './application/use-cases';
-import { AiController } from './ai.controller';
 
+const USE_CASES = [
+  ClassifyContentUseCase,
+  ExtractKeywordsUseCase,
+  GenerateSeoMetaUseCase,
+  GenerateSummaryUseCase,
+  ClassificationStreamUseCase,
+  KeywordsStreamUseCase,
+  SeoMetaStreamUseCase,
+  SummaryStreamUseCase,
+];
 @Module({
   imports: [AppConfigModule],
+  controllers: [AiController],
   providers: [
     // Infrastructure
     InMemoryAICacheService,
@@ -31,20 +46,11 @@ import { AiController } from './ai.controller';
     SummaryPromptBuilder,
 
     // Application (Use Cases)
-    ClassifyContentUseCase,
-    ExtractKeywordsUseCase,
-    GenerateSeoMetaUseCase,
-    GenerateSummaryUseCase,
+    ...USE_CASES,
 
     // Provider binding
     AIProviderBinding,
   ],
-  controllers: [AiController],
-  exports: [
-    ClassifyContentUseCase,
-    ExtractKeywordsUseCase,
-    GenerateSeoMetaUseCase,
-    GenerateSummaryUseCase,
-  ],
+  exports: [...USE_CASES],
 })
 export class AiModule {}
