@@ -8,7 +8,7 @@ import { SummaryPromptBuilder } from '../prompts';
 
 @Injectable()
 export class GenerateSummaryUseCase {
-  private static readonly OPERATION = 'summary';
+  private readonly OPERATION = 'summary';
 
   constructor(
     @Inject(AI_PROVIDER)
@@ -25,7 +25,7 @@ export class GenerateSummaryUseCase {
         maxTokens: 300,
         temperature: 0.3,
         metadata: {
-          operation: GenerateSummaryUseCase.OPERATION,
+          operation: this.OPERATION,
         },
       });
     } catch (error: unknown) {
@@ -33,11 +33,7 @@ export class GenerateSummaryUseCase {
         throw error;
       }
 
-      throw new AIUseCaseError(
-        'Generate summary use case failed',
-        GenerateSummaryUseCase.OPERATION,
-        error,
-      );
+      throw new AIUseCaseError('Generate summary use case failed', this.OPERATION, error);
     }
   }
 }

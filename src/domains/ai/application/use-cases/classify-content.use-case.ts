@@ -8,7 +8,7 @@ import { ClassificationPromptBuilder } from '../prompts';
 
 @Injectable()
 export class ClassifyContentUseCase {
-  private static readonly OPERATION = 'classification';
+  private readonly OPERATION = 'classification';
 
   constructor(
     @Inject(AI_PROVIDER)
@@ -25,7 +25,7 @@ export class ClassifyContentUseCase {
         maxTokens: 50,
         temperature: 0,
         metadata: {
-          operation: ClassifyContentUseCase.OPERATION,
+          operation: this.OPERATION,
         },
       });
     } catch (error: unknown) {
@@ -33,11 +33,7 @@ export class ClassifyContentUseCase {
         throw error;
       }
 
-      throw new AIUseCaseError(
-        'Classification use case failed',
-        ClassifyContentUseCase.OPERATION,
-        error,
-      );
+      throw new AIUseCaseError('Classification use case failed', this.OPERATION, error);
     }
   }
 }

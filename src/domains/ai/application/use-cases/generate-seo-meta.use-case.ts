@@ -8,7 +8,7 @@ import { SeoMetaPromptBuilder } from '../prompts';
 
 @Injectable()
 export class GenerateSeoMetaUseCase {
-  private static readonly OPERATION = 'seo-meta';
+  private readonly OPERATION = 'seo-meta';
 
   constructor(
     @Inject(AI_PROVIDER)
@@ -25,7 +25,7 @@ export class GenerateSeoMetaUseCase {
         maxTokens: 200,
         temperature: 0.6,
         metadata: {
-          operation: GenerateSeoMetaUseCase.OPERATION,
+          operation: this.OPERATION,
         },
       });
     } catch (error: unknown) {
@@ -33,11 +33,7 @@ export class GenerateSeoMetaUseCase {
         throw error;
       }
 
-      throw new AIUseCaseError(
-        'Generate seo-meta use case failed',
-        GenerateSeoMetaUseCase.OPERATION,
-        error,
-      );
+      throw new AIUseCaseError('Generate seo-meta use case failed', this.OPERATION, error);
     }
   }
 }

@@ -8,7 +8,7 @@ import { KeywordsPromptBuilder } from '../prompts';
 
 @Injectable()
 export class ExtractKeywordsUseCase {
-  private static readonly OPERATION = 'keywords';
+  private readonly OPERATION = 'keywords';
 
   constructor(
     @Inject(AI_PROVIDER)
@@ -25,7 +25,7 @@ export class ExtractKeywordsUseCase {
         maxTokens: 150,
         temperature: 0.2,
         metadata: {
-          operation: ExtractKeywordsUseCase.OPERATION,
+          operation: this.OPERATION,
         },
       });
     } catch (error: unknown) {
@@ -33,11 +33,7 @@ export class ExtractKeywordsUseCase {
         throw error;
       }
 
-      throw new AIUseCaseError(
-        'Extraction keywords use case failed',
-        ExtractKeywordsUseCase.OPERATION,
-        error,
-      );
+      throw new AIUseCaseError('Extraction keywords use case failed', this.OPERATION, error);
     }
   }
 }
