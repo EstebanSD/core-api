@@ -8,8 +8,6 @@ describe('InMemoryAICacheService', () => {
     text: 'test result',
     provider: 'ollama',
     model: 'test-model',
-    // usage: 10, TODO
-    // latencyMs: 5, TODO
   };
 
   beforeEach(() => {
