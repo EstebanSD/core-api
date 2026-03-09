@@ -21,7 +21,7 @@ applications into one runtime.
 Each domain remains isolated at the application layer, with clear
 boundaries and minimal cross-domain coupling.
 
-See `docs/architecture.md` for detailed architectural decisions.
+See [`docs/architecture.md`](docs/architecture.md) for detailed architectural decisions.
 
 ---
 

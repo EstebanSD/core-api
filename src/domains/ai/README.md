@@ -116,8 +116,8 @@ The AI module exposes HTTP endpoints for both synchronous and streaming AI opera
 | POST   | /ai/seo-meta              | Generate SEO metadata              | `{ content: string }`                       | AITextResponse             |
 | GET    | /ai/summary/stream        | Stream textual summary via SSE     | `content` query param                       | AIStreamChunk + SSE events |
 | GET    | /ai/classification/stream | Stream classification via SSE      | `content` + `categories` query params       | AIStreamChunk + SSE events |
-| GET    | /ai/keywords/stream       | Stream keywords extraction via SSE | `content` + optional `limit`                | AIStreamChunk + SSE events |
-| GET    | /ai/seo-meta/stream       | Stream SEO metadata via SSE        | `{ content: string }`                       | AIStreamChunk + SSE events |
+| GET    | /ai/keywords/stream       | Stream keywords extraction via SSE | `content` + optional `limit` query params   | AIStreamChunk + SSE events |
+| GET    | /ai/seo-meta/stream       | Stream SEO metadata via SSE        | `content` query param                       | AIStreamChunk + SSE events |
 
 ### Notes:
 
