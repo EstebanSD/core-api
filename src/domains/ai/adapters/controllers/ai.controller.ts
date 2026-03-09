@@ -12,7 +12,7 @@ import {
   SeoMetaStreamUseCase,
   SummaryStreamUseCase,
 } from '../../application/use-cases';
-import { streamToObservable } from '../utils/stream-to-observable.util';
+import { streamToObservable } from '../utils';
 import {
   ClassifyDto,
   ClassifyStreamDto,
