@@ -108,16 +108,16 @@ The AI module exposes HTTP endpoints for both synchronous and streaming AI opera
 
 ### AiController Endpoints
 
-| Method | Path                      | Description                        | Body / Query                                | Response                   |
-| ------ | ------------------------- | ---------------------------------- | ------------------------------------------- | -------------------------- |
-| POST   | /ai/summary               | Generate a textual summary         | `{ content: string }`                       | AITextResponse             |
-| POST   | /ai/classification        | Classify content into categories   | `{ content: string, categories: string[] }` | AITextResponse             |
-| POST   | /ai/keywords              | Extract keywords from content      | `{ content: string, limit?: number }`       | AITextResponse             |
-| POST   | /ai/seo-meta              | Generate SEO metadata              | `{ content: string }`                       | AITextResponse             |
-| GET    | /ai/summary/stream        | Stream textual summary via SSE     | `content` query param                       | AIStreamChunk + SSE events |
-| GET    | /ai/classification/stream | Stream classification via SSE      | `content` + `categories` query params       | AIStreamChunk + SSE events |
-| GET    | /ai/keywords/stream       | Stream keywords extraction via SSE | `content` + optional `limit` query params   | AIStreamChunk + SSE events |
-| GET    | /ai/seo-meta/stream       | Stream SEO metadata via SSE        | `content` query param                       | AIStreamChunk + SSE events |
+| Method | Path                | Description                        | Body / Query                                | Response                   |
+| ------ | ------------------- | ---------------------------------- | ------------------------------------------- | -------------------------- |
+| POST   | /ai/summary         | Generate a textual summary         | `{ content: string }`                       | AITextResponse             |
+| POST   | /ai/classify        | Classify content into categories   | `{ content: string, categories: string[] }` | AITextResponse             |
+| POST   | /ai/keywords        | Extract keywords from content      | `{ content: string, limit?: number }`       | AITextResponse             |
+| POST   | /ai/seo-meta        | Generate SEO metadata              | `{ content: string }`                       | AITextResponse             |
+| GET    | /ai/summary/stream  | Stream textual summary via SSE     | `content` query param                       | AIStreamChunk + SSE events |
+| GET    | /ai/classify/stream | Stream classification via SSE      | `content` + `categories` query params       | AIStreamChunk + SSE events |
+| GET    | /ai/keywords/stream | Stream keywords extraction via SSE | `content` + optional `limit` query params   | AIStreamChunk + SSE events |
+| GET    | /ai/seo-meta/stream | Stream SEO metadata via SSE        | `content` query param                       | AIStreamChunk + SSE events |
 
 ### Notes:
 
