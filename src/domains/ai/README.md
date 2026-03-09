@@ -102,6 +102,31 @@ Metrics are separated from provider logic to maintain single responsibility.
 
 ---
 
+## Controllers
+
+The AI module exposes HTTP endpoints for both synchronous and streaming AI operations. These controllers serve as the public interface of the module.
+
+### AiController Endpoints
+
+| Method | Path                      | Description                        | Body / Query                                | Response                   |
+| ------ | ------------------------- | ---------------------------------- | ------------------------------------------- | -------------------------- |
+| POST   | /ai/summary               | Generate a textual summary         | `{ content: string }`                       | AITextResponse             |
+| POST   | /ai/classification        | Classify content into categories   | `{ content: string, categories: string[] }` | AITextResponse             |
+| POST   | /ai/keywords              | Extract keywords from content      | `{ content: string, limit?: number }`       | AITextResponse             |
+| POST   | /ai/seo-meta              | Generate SEO metadata              | `{ content: string }`                       | AITextResponse             |
+| GET    | /ai/summary/stream        | Stream textual summary via SSE     | `content` query param                       | AIStreamChunk + SSE events |
+| GET    | /ai/classification/stream | Stream classification via SSE      | `content` + `categories` query params       | AIStreamChunk + SSE events |
+| GET    | /ai/keywords/stream       | Stream keywords extraction via SSE | `content` + optional `limit`                | AIStreamChunk + SSE events |
+| GET    | /ai/seo-meta/stream       | Stream SEO metadata via SSE        | `{ content: string }`                       | AIStreamChunk + SSE events |
+
+### Notes:
+
+- Streaming endpoints always use GET due to Server-Sent Events (SSE) constraints.
+- Each SSE message contains a single AIStreamChunk.
+- All synchronous endpoints return the AITextResponse type.
+
+---
+
 ## Configuration
 
 Provider selection is controlled via configuration:
