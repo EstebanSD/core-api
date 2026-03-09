@@ -21,7 +21,11 @@ export interface AppConfig {
       apiSecret: string;
     };
   };
+  // runAiTests: string; integrations
   ai: {
     provider: 'mock' | 'ollama' | 'openai';
+    model: string;
+    apiKey: string;
+    ollamaBaseUrl: string;
   };
 }

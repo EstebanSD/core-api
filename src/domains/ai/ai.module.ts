@@ -1,40 +1,56 @@
 import { Module } from '@nestjs/common';
-import { AppConfigModule, AppConfigService } from 'src/config';
-import { CustomLoggerService } from 'src/common/logger/custom-logger.service';
-import { AI_PROVIDER } from './domain/ai.tokens';
-import { AIProviderFactory } from './infrastructure/ai-provider.factory';
+import { AppConfigModule } from 'src/config';
 import { AIMetricsService } from './infrastructure/metrics/ai-metrics.service';
+import { InMemoryAICacheService } from './infrastructure/cache/in-memory-ai-cache.service';
+import { AIProviderBinding } from './infrastructure/providers/ai-provider.binding';
+import { AiController } from './adapters/controllers/ai.controller';
+import {
+  ClassificationPromptBuilder,
+  KeywordsPromptBuilder,
+  SeoMetaPromptBuilder,
+  SummaryPromptBuilder,
+} from './application/prompts';
 import {
   ClassifyContentUseCase,
   ExtractKeywordsUseCase,
   GenerateSeoMetaUseCase,
   GenerateSummaryUseCase,
+  ClassificationStreamUseCase,
+  KeywordsStreamUseCase,
+  SeoMetaStreamUseCase,
+  SummaryStreamUseCase,
 } from './application/use-cases';
-import { AiTestController } from './ai.controller';
 
+const USE_CASES = [
+  ClassifyContentUseCase,
+  ExtractKeywordsUseCase,
+  GenerateSeoMetaUseCase,
+  GenerateSummaryUseCase,
+  ClassificationStreamUseCase,
+  KeywordsStreamUseCase,
+  SeoMetaStreamUseCase,
+  SummaryStreamUseCase,
+];
 @Module({
   imports: [AppConfigModule],
+  controllers: [AiController],
   providers: [
-    ClassifyContentUseCase,
-    ExtractKeywordsUseCase,
-    GenerateSeoMetaUseCase,
-    GenerateSummaryUseCase,
-    {
-      provide: AI_PROVIDER,
-      inject: [AppConfigService, CustomLoggerService, AIMetricsService],
-      useFactory: (
-        config: AppConfigService,
-        logger: CustomLoggerService,
-        metrics: AIMetricsService,
-      ) => AIProviderFactory.create(config, logger, metrics),
-    },
+    // Infrastructure
+    InMemoryAICacheService,
+    AIMetricsService,
+
+    // Prompt builders
+    ClassificationPromptBuilder,
+    KeywordsPromptBuilder,
+    SeoMetaPromptBuilder,
+    SummaryPromptBuilder,
+
+    // Application (Use Cases)
+    ...USE_CASES,
+
+    // Provider binding
+    AIProviderBinding,
   ],
-  controllers: [AiTestController],
-  exports: [
-    ClassifyContentUseCase,
-    ExtractKeywordsUseCase,
-    GenerateSeoMetaUseCase,
-    GenerateSummaryUseCase,
-  ],
+  exports: [...USE_CASES],
 })
 export class AiModule {}
