@@ -1,6 +1,6 @@
 import { Throttle } from '@nestjs/throttler';
 import { Observable } from 'rxjs';
-import { Body, Controller, Get, Post, Sse, MessageEvent, Query } from '@nestjs/common';
+import { Body, Controller, Get, Post, Sse, MessageEvent, Query, Header } from '@nestjs/common';
 import { AIMetricsService } from '../../infrastructure/metrics/ai-metrics.service';
 import {
   ClassificationStreamUseCase,
@@ -47,6 +47,8 @@ export class AiController {
   }
 
   @Sse('classify/stream')
+  @Header('Cache-Control', 'no-cache, no-transform')
+  @Header('X-Accel-Buffering', 'no')
   classify(@Query() query: ClassifyStreamDto): Observable<MessageEvent> {
     const categories = query.categories.split(',');
 
@@ -60,6 +62,8 @@ export class AiController {
   }
 
   @Sse('keywords/stream')
+  @Header('Cache-Control', 'no-cache, no-transform')
+  @Header('X-Accel-Buffering', 'no')
   keywords(@Query() query: KeywordsStreamDto): Observable<MessageEvent> {
     const limit = parseInt(query.limit || '10');
 
@@ -73,6 +77,8 @@ export class AiController {
   }
 
   @Sse('seo-meta/stream')
+  @Header('Cache-Control', 'no-cache, no-transform')
+  @Header('X-Accel-Buffering', 'no')
   seoMeta(@Query() query: SeoMetaStreamDto): Observable<MessageEvent> {
     const stream = this.seoMetaStream.execute(query.content);
     return streamToObservable(stream);
@@ -84,6 +90,8 @@ export class AiController {
   }
 
   @Sse('summary/stream')
+  @Header('Cache-Control', 'no-cache, no-transform')
+  @Header('X-Accel-Buffering', 'no')
   summary(@Query() query: SummaryStreamDto): Observable<MessageEvent> {
     const stream = this.summaryStream.execute(query.content);
     return streamToObservable(stream);

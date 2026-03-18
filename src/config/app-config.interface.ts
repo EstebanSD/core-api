@@ -23,9 +23,9 @@ export interface AppConfig {
   };
   // runAiTests: string; integrations
   ai: {
-    provider: 'mock' | 'ollama' | 'openai';
+    provider: 'mock' | 'ollama' | 'open-router' | 'vercel';
     model: string;
     apiKey: string;
-    ollamaBaseUrl: string;
+    aiBaseUrl: string;
   };
 }
