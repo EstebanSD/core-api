@@ -73,7 +73,7 @@ export class AppConfigService {
     return cloudinary;
   }
 
-  get aiProvider(): 'mock' | 'ollama' | 'openai' {
+  get aiProvider(): AppConfig['ai']['provider'] {
     const { provider } = this.config.getOrThrow<AppConfig['ai']>('ai');
     return provider;
   }
@@ -86,8 +86,8 @@ export class AppConfigService {
     return apiKey;
   }
 
-  get ollamaBaseUrl(): string {
-    const { ollamaBaseUrl } = this.config.getOrThrow<AppConfig['ai']>('ai');
-    return ollamaBaseUrl;
+  get aiBaseUrl(): string {
+    const { aiBaseUrl } = this.config.getOrThrow<AppConfig['ai']>('ai');
+    return aiBaseUrl;
   }
 }

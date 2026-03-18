@@ -36,11 +36,12 @@ export const validationSchema = Joi.object({
 
   RUN_AI_TESTS: Joi.string().default('false'),
 
-  AI_PROVIDER: Joi.string().valid('mock', 'ollama', 'openai').default('mock'),
-  AI_MODEL: Joi.string().required(),
+  AI_PROVIDER: Joi.string().valid('mock', 'ollama', 'open-router', 'vercel').default('mock'),
   AI_API_KEY: Joi.string().required(),
-  OLLAMA_BASE_URL: Joi.string().when('AI_PROVIDER', {
-    is: 'ollama',
+  AI_MODEL: Joi.string().default('llama3'),
+  AI_BASE_URL: Joi.string().default('http://localhost:11434/v1'),
+  AI_GATEWAY_API_KEY: Joi.string().when('AI_PROVIDER', {
+    is: 'vercel',
     then: Joi.required(),
     otherwise: Joi.optional(),
   }),
