@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core';
+import type { Express } from 'express';
 import { AppModule } from './app.module';
 import { AppConfigService } from './config';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
@@ -26,6 +27,10 @@ async function bootstrap() {
     const logger = app.get(CustomLoggerService);
     const isProd = config.isProduction;
 
+    if (config.isProduction) {
+      const expressApp = app.getHttpAdapter().getInstance() as Express;
+      expressApp.set('trust proxy', 1);
+    }
     const corsOptions = isProd
       ? {
           origin: config.allowedOrigins,

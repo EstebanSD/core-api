@@ -1,6 +1,8 @@
-import { PromptInput } from './prompt-input';
-import { AIResponse } from './ai-response';
+import type { AITextRequest } from './prompt-input';
+import type { AITextResponse, AIStreamChunk } from './ai-response';
 
 export interface AIProvider {
-  generateText(input: PromptInput): Promise<AIResponse>;
+  generateText(input: AITextRequest): Promise<AITextResponse>;
+
+  streamText?(input: AITextRequest): AsyncIterable<AIStreamChunk>;
 }

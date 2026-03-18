@@ -18,7 +18,6 @@ export const validationSchema = Joi.object({
   MONGO_DB_PORTFOLIO: Joi.string().required(),
 
   STORAGE_PROVIDER: Joi.string().valid('local', 'cloudinary', 's3').required(),
-
   CLOUDINARY_CLOUD_NAME: Joi.string().when('STORAGE_PROVIDER', {
     is: 'cloudinary',
     then: Joi.required(),
@@ -35,5 +34,15 @@ export const validationSchema = Joi.object({
     otherwise: Joi.optional(),
   }),
 
-  AI_PROVIDER: Joi.string().valid('mock', 'ollama', 'openai').default('mock'),
+  RUN_AI_TESTS: Joi.string().default('false'),
+
+  AI_PROVIDER: Joi.string().valid('mock', 'ollama', 'open-router', 'vercel').default('mock'),
+  AI_API_KEY: Joi.string().required(),
+  AI_MODEL: Joi.string().default('llama3'),
+  AI_BASE_URL: Joi.string().default('http://localhost:11434/v1'),
+  AI_GATEWAY_API_KEY: Joi.string().when('AI_PROVIDER', {
+    is: 'vercel',
+    then: Joi.required(),
+    otherwise: Joi.optional(),
+  }),
 });

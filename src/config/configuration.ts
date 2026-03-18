@@ -26,7 +26,11 @@ export default () => ({
     },
   },
 
+  // runAiTests: process.env.RUN_AI_TESTS integrations
   ai: {
     provider: process.env.AI_PROVIDER || 'mock',
+    model: process.env.AI_MODEL,
+    apiKey: process.env.AI_API_KEY,
+    ollamaBaseUrl: process.env.OLLAMA_BASE_URL,
   },
 });

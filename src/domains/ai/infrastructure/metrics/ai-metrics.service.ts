@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-export interface TaskMetrics {
+interface TaskMetrics {
   totalRequests: number;
   totalErrors: number;
   totalLatencyMs: number;

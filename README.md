@@ -1,91 +1,164 @@
 # core-api
 
-A modular and scalable API built with **NestJS** and **MongoDB**, designed to power a developer's portfolio and other personal projects.  
-This backend serves as the central data source for multiple front-ends (e.g. portfolio, blog, etc).
+Central modular backend powering multiple independent applications
+(portfolio, AI features, future projects) from a single deploy.
+
+This project follows a **modular monolith architecture** built with
+NestJS and MongoDB, designed to host multiple bounded domains while
+operating under infrastructure constraints.
 
 ---
 
-## 🛠️ Tech Stack
+## Architecture Overview
 
-- **NestJS** - (Modular backend framework)
-- **MongoDB Atlas** - with dynamic database switching
-- **Mongoose** - ODM for MongoDB
-- **@nestjs/config** – Environment-based configuration
+### Why a Modular Monolith?
 
----
+Render's free tier provides a single free service per account. Instead
+of fragmenting infrastructure across multiple accounts or introducing
+premature microservices, this backend consolidates multiple logical
+applications into one runtime.
 
-## 🚀 Getting Started
+Each domain remains isolated at the application layer, with clear
+boundaries and minimal cross-domain coupling.
 
-> ⚠️ **This project requires a MongoDB connection.**
->
-> You can:
->
-> - Create a free MongoDB Atlas cluster: https://www.mongodb.com/cloud/atlas/register
-> - Replace `<username>` and `<password>` in the `.env.development` file with your actual credentials.
+See [`docs/architecture.md`](docs/architecture.md) for detailed architectural decisions.
 
 ---
 
-## ☁️ Storage Providers
+## Domains
 
-This project supports multiple file storage providers via a pluggable architecture:
+### Portfolio
 
-- `local` (default): stores files on the local filesystem (temporary usage).
-- `cloudinary`: uploads files to [Cloudinary](https://cloudinary.com/).
+Handles public portfolio data:
 
-Set the provider in your `.env.development`:
+- Projects
+- Experience
+- Skills
+- About information
 
-```env
+Uses its own MongoDB database.
 
-STORAGE_PROVIDER=local # or "cloudinary"
+---
 
-Cloudinary Configuration
-To use Cloudinary, add the following environment variables:
+### AI Module
 
-CLOUDINARY_CLOUD_NAME=your-cloud-name
-CLOUDINARY_API_KEY=your-api-key
+Abstracted AI provider layer supporting:
+
+- Mock provider (local testing)
+- OpenAI provider
+- Ollama (local LLM runtime)
+
+Designed to be provider-agnostic and easily extensible.
+
+---
+
+### Future Domains
+
+The architecture supports additional bounded contexts without structural
+changes to the runtime.
+
+---
+
+## Infrastructure
+
+- NestJS
+- MongoDB Atlas (multi-database strategy)
+- Mongoose
+- JWT Authentication (access + refresh tokens)
+- Pluggable Storage Providers:
+  - local
+  - cloudinary
+- Environment validation via Joi
+- Strict TypeScript configuration
+
+---
+
+## Deployment Strategy
+
+Single Render service.
+
+Build phase: - Install dependencies (including dev) - TypeScript
+compilation
+
+Runtime phase: - Compiled JavaScript only (`dist/`) - No TypeScript
+execution in production
+
+---
+
+## Environment Configuration
+
+Key variables:
+
+PORT\
+BASE_URL\
+NODE_ENV
+
+JWT_SECRET\
+JWT_ACCESS_TOKEN_EXPIRES_IN (seconds)\
+JWT_REFRESH_TOKEN_EXPIRES_IN (seconds)
+
+MONGO_URI\
+MONGO_DB_AUTH\
+MONGO_DB_PORTFOLIO
+
+STORAGE_PROVIDER
+
+Example:
+
+JWT_ACCESS_TOKEN_EXPIRES_IN=900\
+JWT_REFRESH_TOKEN_EXPIRES_IN=604800
+
+---
+
+## Storage Providers
+
+Supported providers:
+
+- local (default) --- filesystem storage
+- cloudinary --- remote asset management
+
+To enable Cloudinary:
+
+STORAGE_PROVIDER=cloudinary\
+CLOUDINARY_CLOUD_NAME=your-cloud-name\
+CLOUDINARY_API_KEY=your-api-key\
 CLOUDINARY_API_SECRET=your-api-secret
 
-📝 You can get a free account at https://cloudinary.com
-
-```
-
 ---
 
-### 1. Clone the repo
+## Getting Started
 
-```bash
+### 1. Clone the repository
 
- git clone https://github.com/EstebanSD/core-api.git
- cd core-api
-
-```
+git clone https://github.com/EstebanSD/core-api.git\
+cd core-api
 
 ### 2. Install dependencies
 
-```bash
-
- npm install
-
-```
+npm install
 
 ### 3. Configure environment
 
-Create your .env based on the provided .env.example:
+cp .env.example .env.development
 
-```bash
-
- cp .env.example .env.development
-
-```
+Edit credentials accordingly.
 
 ### 4. Run in development
 
-```bash
+npm run dev
 
- npm run dev
+---
 
-```
+## Security Considerations
 
-## 📄 License
+- JWT-based authentication
+- Role-based access
+- Environment schema validation
+- Storage provider abstraction
+- Domain isolation within a single runtime
 
-This project is licensed under the [MIT License](LICENSE).
+---
+
+## License
+
+[MIT](LICENSE)

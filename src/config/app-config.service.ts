@@ -73,8 +73,21 @@ export class AppConfigService {
     return cloudinary;
   }
 
-  get aiProvider(): 'mock' | 'ollama' | 'openai' {
-    const { provider } = this.config.getOrThrow<{ provider: 'mock' | 'ollama' | 'openai' }>('ai');
+  get aiProvider(): AppConfig['ai']['provider'] {
+    const { provider } = this.config.getOrThrow<AppConfig['ai']>('ai');
     return provider;
+  }
+  get aiModel(): string {
+    const { model } = this.config.getOrThrow<AppConfig['ai']>('ai');
+    return model;
+  }
+  get aiApiKey(): string {
+    const { apiKey } = this.config.getOrThrow<AppConfig['ai']>('ai');
+    return apiKey;
+  }
+
+  get aiBaseUrl(): string {
+    const { aiBaseUrl } = this.config.getOrThrow<AppConfig['ai']>('ai');
+    return aiBaseUrl;
   }
 }
