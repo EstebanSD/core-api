@@ -10,8 +10,8 @@
     "npm": ">=10"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
-    "start": "NODE_ENV=production node -r tsconfig-paths/register dist/main.js",
+    "build": "tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
+    "start": "NODE_ENV=production node dist/main.js",
     "start:dev": "NODE_ENV=development nest start --watch",
     "start:debug": "NODE_ENV=development nest start --debug --watch",
     "dev": "npm run start:dev",
@@ -85,6 +85,7 @@
     "ts-jest": "^29.2.5",
     "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
+    "tsc-alias": "^1.8.16",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0"
